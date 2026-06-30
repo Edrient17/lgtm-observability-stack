@@ -1,0 +1,74 @@
+target: all
+multitenancy_enabled: false
+
+server:
+  http_listen_port: 9009
+  grpc_listen_port: 9095
+  log_level: info
+
+common:
+  storage:
+    backend: s3
+    s3:
+      endpoint: minio:9000
+      access_key_id: ${MINIO_ROOT_USER}
+      secret_access_key: ${MINIO_ROOT_PASSWORD}
+      insecure: true
+
+blocks_storage:
+  backend: s3
+  s3:
+    bucket_name: mimir-blocks
+  tsdb:
+    dir: /data/mimir/tsdb
+
+compactor:
+  data_dir: /data/mimir/compactor
+  sharding_ring:
+    kvstore:
+      store: memberlist
+
+distributor:
+  ring:
+    kvstore:
+      store: memberlist
+
+ingester:
+  ring:
+    replication_factor: 1
+    kvstore:
+      store: memberlist
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+    kvstore:
+      store: memberlist
+
+ruler:
+  enable_api: true
+  rule_path: /data/mimir/ruler
+  ring:
+    kvstore:
+      store: memberlist
+
+ruler_storage:
+  backend: s3
+  s3:
+    bucket_name: mimir-ruler
+
+alertmanager:
+  data_dir: /data/mimir/alertmanager
+
+alertmanager_storage:
+  backend: s3
+  s3:
+    bucket_name: mimir-alertmanager
+
+limits:
+  compactor_blocks_retention_period: 168h
+
+memberlist:
+  join_members:
+    - mimir
+

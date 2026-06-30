@@ -1,0 +1,52 @@
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 168h
+
+storage:
+  trace:
+    backend: s3
+    wal:
+      path: /var/tempo/wal
+    s3:
+      bucket: tempo-traces
+      endpoint: minio:9000
+      access_key: ${MINIO_ROOT_USER}
+      secret_key: ${MINIO_ROOT_PASSWORD}
+      insecure: true
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: ixcloud-lgtm
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://mimir:9009/api/v1/push
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - service-graphs
+        - span-metrics
+
+usage_report:
+  reporting_enabled: false
+

@@ -1,0 +1,46 @@
+groups:
+  - name: node-resource-alerts
+    rules:
+      - alert: HighCpuUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: node-exporter
+        annotations:
+          summary: "CPU usage is above 80% for 5 minutes"
+          description: "Instance {{ $labels.instance }} CPU usage is {{ $value | printf \"%.2f\" }}%."
+
+      - alert: HighDiskUsage
+        expr: |
+          100 * (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"})) > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: node-exporter
+        annotations:
+          summary: "Disk usage is above 85%"
+          description: "Instance {{ $labels.instance }} filesystem {{ $labels.mountpoint }} usage is {{ $value | printf \"%.2f\" }}%."
+
+  - name: observability-pipeline-alerts
+    rules:
+      - alert: LokiTargetDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: loki
+        annotations:
+          summary: "Loki scrape target is down"
+          description: "Prometheus cannot scrape Loki metrics."
+
+      - alert: TempoTargetDown
+        expr: up{job="tempo"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: tempo
+        annotations:
+          summary: "Tempo scrape target is down"
+          description: "Prometheus cannot scrape Tempo metrics."
+
