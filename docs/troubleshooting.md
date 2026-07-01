@@ -1,59 +1,70 @@
 # Troubleshooting
 
-Use this file as a live build log. The final report requires at least two real troubleshooting cases.
+Use this file as a live build log. The final report should include real symptoms, root causes, fixes, and outcomes from the two-VM deployment.
 
-## Case 1: Mimir or Tempo Cannot Access MinIO Bucket
-
-- Symptom:
-  - Mimir or Tempo starts but logs S3 bucket or access denied errors.
-- Likely cause:
-  - `minio-init` did not complete, credentials differ from `.env`, or a service started before bucket creation.
-- Fix:
-  - Check `docker compose logs minio-init`.
-  - Confirm `.env` values match `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD`.
-  - Run `docker compose up -d minio-init`.
-  - Restart the failing service.
-
-## Case 2: Grafana Dashboard Has No Data
+## Case 1: Monitoring VM Node Exporter Port Conflict
 
 - Symptom:
-  - Dashboards load but panels show `No data`.
-- Likely cause:
-  - Sample traffic has not been generated yet, Prometheus targets are down, or Mimir remote write is not ready.
+  - `docker compose up -d` fails with `Bind for 127.0.0.1:9100 failed: port is already allocated`.
+- Root cause:
+  - An older Docker container still had a `node-exporter` instance publishing `127.0.0.1:9100`.
 - Fix:
-  - Run `./scripts/generate-load.sh`.
-  - Check Prometheus targets at `http://localhost:9090/targets`.
-  - Query `up` in Grafana Explore using the Mimir datasource.
+  - Stop the older stack or remove the old container.
+  - Re-run the Monitoring VM stack.
+- Useful commands:
+  - `sudo ss -ltnp | grep ':9100'`
+  - `docker ps | grep node`
+  - `docker stop <old-node-exporter-container>`
+  - `docker rm <old-node-exporter-container>`
 
-## Case 3: Promtail Does Not Collect Docker Logs
+## Case 2: Demo Service Exits With Missing `pkg_resources`
 
 - Symptom:
-  - Loki works, but `{job="docker"}` returns no streams.
-- Likely cause:
-  - The deployment host is not Linux Docker Engine, or `/var/lib/docker/containers` is unavailable.
+  - App VM service exits immediately with `ModuleNotFoundError: No module named 'pkg_resources'`.
+- Root cause:
+  - `python:3.12-slim` does not include `setuptools` by default, while OpenTelemetry instrumentation imports `pkg_resources`.
 - Fix:
-  - Deploy on the target Ubuntu VM.
-  - Confirm Docker JSON log files exist under `/var/lib/docker/containers`.
-  - Restart Promtail after containers generate new logs.
+  - Add `setuptools` to `msa-demo/requirements.txt`.
+  - Rebuild the App VM services with `docker compose up -d --build`.
 
-## Case 4: Docker Permission Denied
+## Case 3: App VM `8080` Connection Refused From Monitoring VM
 
 - Symptom:
-  - `docker compose up -d --build` or `docker info` fails with a Docker socket permission error.
-- Likely cause:
-  - The current VM user is not a member of the `docker` group.
+  - `curl http://<app-vm-private-ip>:8080/metrics` returns `Connection refused`, while `9100/metrics` works.
+- Root cause:
+  - The app container was not running or exited after startup.
 - Fix:
-  - Run `sudo usermod -aG docker $USER`.
-  - Run `newgrp docker`, or log out of SSH and log back in.
-  - Confirm with `docker info`.
+  - Check `docker compose ps -a`.
+  - Check `docker compose logs api-service`.
+  - Rebuild and restart the App VM stack.
 
-## Case 5: Docker Container Log Path Is Missing
+## Case 4: Loki `/ready` Temporarily Reports Ingester Not Ready
 
 - Symptom:
-  - Promtail fails to start or Docker log scraping does not work because `/var/lib/docker/containers` is unavailable.
-- Likely cause:
-  - Docker is installed with a non-default data root, or the current user cannot inspect the directory directly.
+  - `curl http://<monitoring-vm-private-ip>:3100/ready` returns `Ingester not ready: waiting for 15s after being ready`.
+- Root cause:
+  - Loki has started but is still passing its startup readiness delay.
 - Fix:
-  - Check Docker's root directory with `docker info --format '{{.DockerRootDir}}'`.
-  - Confirm container logs exist under that directory after containers have started.
-  - If the root directory is not `/var/lib/docker`, update the Promtail bind mount in `docker-compose.yml` before restarting Promtail.
+  - Wait briefly and retry.
+  - If it persists, inspect `docker compose logs loki`.
+
+## Case 5: OTel Collector `4318/` Returns 404
+
+- Symptom:
+  - `curl http://<monitoring-vm-private-ip>:4318/` returns `404 page not found`.
+- Root cause:
+  - OTLP HTTP receiver is reachable, but `/` is not a data ingestion path.
+- Fix:
+  - Treat this as a connectivity success.
+  - Validate traces by generating `/checkout` traffic and checking Tempo.
+
+## Case 6: Dashboard Has No Data
+
+- Symptom:
+  - Grafana dashboard loads but panels show `No data`.
+- Root cause:
+  - App VM traffic has not been generated, Prometheus targets are down, or Mimir remote write is not ready.
+- Fix:
+  - Run `./scripts/random-demo-traffic.sh` on the App VM.
+  - Query `up` and `sum by (service) (rate(demo_app_requests_total[5m]))`.
+  - Check Prometheus targets from Grafana Explore or Prometheus UI.

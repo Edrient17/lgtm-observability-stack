@@ -27,13 +27,13 @@
             "type": "tempo",
             "uid": "tempo"
           },
-          "query": "{ resource.service.name = \"demo-app\" }",
+          "query": "{ resource.service.name = \"api-service\" }",
           "queryType": "traceql",
           "refId": "A",
           "tableType": "traces"
         }
       ],
-      "title": "Demo App Traces",
+      "title": "MSA Checkout Traces",
       "type": "table"
     },
     {
@@ -112,4 +112,3 @@
   "version": 1,
   "weekStart": ""
 }
-

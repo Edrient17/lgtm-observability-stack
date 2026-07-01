@@ -130,13 +130,13 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "rate(demo_app_requests_total[5m])",
-          "legendFormat": "{{endpoint}} {{status}}",
+          "expr": "sum by (service, endpoint, status) (rate(demo_app_requests_total[5m]))",
+          "legendFormat": "{{service}} {{endpoint}} {{status}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Demo App Request Rate",
+      "title": "MSA Request Rate",
       "type": "timeseries"
     }
   ],
@@ -159,4 +159,3 @@
   "version": 1,
   "weekStart": ""
 }
-

@@ -1,6 +1,9 @@
-.PHONY: up down restart ps logs preflight validate load monitoring-up monitoring-down monitoring-ps monitoring-logs app-up app-down app-ps app-logs
+.PHONY: up up-build down restart ps logs validate traffic
 
 up:
+	docker compose up -d
+
+up-build:
 	docker compose up -d --build
 
 down:
@@ -8,7 +11,7 @@ down:
 
 restart:
 	docker compose down
-	docker compose up -d --build
+	docker compose up -d
 
 ps:
 	docker compose ps
@@ -16,35 +19,8 @@ ps:
 logs:
 	docker compose logs -f --tail=200
 
-preflight:
-	bash ./scripts/preflight.sh
-
 validate:
 	bash ./scripts/healthcheck.sh
 
-load:
-	bash ./scripts/generate-load.sh
-
-monitoring-up:
-	docker compose up -d
-
-monitoring-down:
-	docker compose down
-
-monitoring-ps:
-	docker compose ps
-
-monitoring-logs:
-	docker compose logs -f --tail=200
-
-app-up:
-	docker compose up -d --build
-
-app-down:
-	docker compose down
-
-app-ps:
-	docker compose ps
-
-app-logs:
-	docker compose logs -f --tail=200
+traffic:
+	bash ./scripts/random-demo-traffic.sh

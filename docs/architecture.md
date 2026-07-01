@@ -2,34 +2,76 @@
 
 ## Goal
 
-Build a single-VM observability stack that collects logs, metrics, and traces, stores them durably, and exposes them through Grafana dashboards.
+Build a two-VM observability environment that monitors a small MSA-style app from a separate LGTM backend VM.
 
-## Data Flows
+## Topology
 
-### Logs
+```text
+Monitoring VM
+  Grafana
+  Loki
+  Mimir
+  Tempo
+  Prometheus
+  OpenTelemetry Collector
+  MinIO
+  Node Exporter
 
-1. Applications and Docker containers write logs to stdout or host log files.
-2. Promtail tails `/var/log/*.log` and Docker JSON log files.
-3. Promtail pushes log streams to Loki.
-4. Grafana queries Loki with LogQL.
-5. JSON logs containing `trace_id` link back to Tempo traces through Grafana derived fields.
+App VM
+  api-service
+  order-service
+  payment-service
+  Promtail
+  Node Exporter
+```
 
-### Metrics
+## MSA Request Flow
 
-1. Prometheus scrapes itself, Node Exporter, Grafana, Loki, Mimir, Tempo, and the demo app.
-2. Prometheus writes samples to Mimir through `remote_write`.
-3. Mimir stores blocks in MinIO.
+```text
+api-service /checkout
+  -> order-service /orders
+      -> payment-service /payments
+```
+
+The three services share one codebase but run as separate containers with different `OTEL_SERVICE_NAME`, `SERVICE_ROLE`, and `PORT` values.
+
+## Logs
+
+1. App services write JSON logs to stdout.
+2. Docker stores container logs on the App VM.
+3. Promtail tails Docker JSON logs and `/var/log/*.log`.
+4. Promtail pushes streams to Loki on the Monitoring VM.
+5. Grafana queries Loki with LogQL.
+6. JSON logs include `trace_id` and `span_id` so logs can be correlated with Tempo traces.
+
+## Metrics
+
+1. Prometheus runs on the Monitoring VM.
+2. It scrapes:
+   - Monitoring VM Node Exporter
+   - App VM Node Exporter
+   - `api-service:8080/metrics`
+   - `order-service:8081/metrics`
+   - `payment-service:8082/metrics`
+   - Grafana, Loki, Mimir, Tempo, and Prometheus itself
+3. Prometheus writes samples to Mimir with `remote_write`.
 4. Grafana queries Mimir with PromQL.
 
-### Traces
+## Traces
 
-1. The demo app exports OTLP traces to the OpenTelemetry Collector.
-2. The collector batches traces and exports them to Tempo.
-3. Tempo stores traces in MinIO.
-4. Tempo metrics-generator writes span metrics and service graph metrics to Mimir.
-5. Grafana queries Tempo with TraceQL and correlates traces with logs and metrics.
+1. App services use OpenTelemetry Flask and Requests instrumentation.
+2. Trace context is propagated across `api-service -> order-service -> payment-service`.
+3. Services export OTLP traces to the OpenTelemetry Collector on the Monitoring VM.
+4. The collector forwards traces to Tempo.
+5. Tempo stores trace blocks in MinIO and exposes TraceQL query support to Grafana.
 
 ## Security Posture
 
-Only Grafana is intended for external access. All other ports are bound to `127.0.0.1` in `docker-compose.yml`, and services communicate through the private Docker bridge network named `observability`.
+Only Grafana `3000/tcp` is intended for user-facing access.
 
+VM-to-VM traffic should be limited by private IP security group rules:
+
+- App VM -> Monitoring VM: Loki `3100`, OTel `4317/4318`
+- Monitoring VM -> App VM: app service metrics `8080/8081/8082`, Node Exporter `9100`
+
+Mimir, Tempo, Prometheus, MinIO, and Loki should not be publicly exposed.

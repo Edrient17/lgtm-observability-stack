@@ -32,7 +32,7 @@ App VM
 ```text
 App VM -> Monitoring VM
   - 3100/tcp: Promtail pushes logs to Loki
-  - 4317/tcp: Demo App exports OTLP traces to OTel Collector
+  - 4317/tcp: MSA services export OTLP traces to OTel Collector
   - 4318/tcp: Optional OTLP HTTP receiver
 
 Monitoring VM -> App VM
@@ -57,8 +57,6 @@ Use private IPs for all VM-to-VM traffic when the cloud network supports it.
 | `.env.app.example` | App VM | Environment template copied to `.env` for monitored app stack |
 | `docker-compose.app.yml` | App VM | API Service, Order Service, Payment Service, Node Exporter, Promtail |
 | `configs/promtail/promtail-app-config.yaml` | App VM | Pushes App VM logs to Monitoring VM Loki |
-
-The original `docker-compose.yml` remains available for single-VM local validation.
 
 ## Monitoring VM Setup
 

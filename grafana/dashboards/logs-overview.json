@@ -38,12 +38,12 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{job=\"docker\"} |= \"demo-app\"",
+          "expr": "{job=\"docker\", host=\"app-vm\"}",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Demo App Logs",
+      "title": "App VM Service Logs",
       "type": "logs"
     },
     {
@@ -93,13 +93,13 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"docker\"} |= \"intentional demo error\" [5m]))",
+          "expr": "sum(count_over_time({job=\"docker\", host=\"app-vm\"} | json | level=\"ERROR\" [5m]))",
           "legendFormat": "errors",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Demo Errors",
+      "title": "MSA Error Logs",
       "type": "timeseries"
     }
   ],
@@ -122,4 +122,3 @@
   "version": 1,
   "weekStart": ""
 }
-
