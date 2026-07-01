@@ -26,25 +26,25 @@ load:
 	bash ./scripts/generate-load.sh
 
 monitoring-up:
-	docker compose --env-file .env.monitoring -f docker-compose.monitoring.yml up -d
+	docker compose up -d
 
 monitoring-down:
-	docker compose --env-file .env.monitoring -f docker-compose.monitoring.yml down
+	docker compose down
 
 monitoring-ps:
-	docker compose --env-file .env.monitoring -f docker-compose.monitoring.yml ps
+	docker compose ps
 
 monitoring-logs:
-	docker compose --env-file .env.monitoring -f docker-compose.monitoring.yml logs -f --tail=200
+	docker compose logs -f --tail=200
 
 app-up:
-	docker compose --env-file .env.app -f docker-compose.app.yml up -d --build
+	docker compose up -d --build
 
 app-down:
-	docker compose --env-file .env.app -f docker-compose.app.yml down
+	docker compose down
 
 app-ps:
-	docker compose --env-file .env.app -f docker-compose.app.yml ps
+	docker compose ps
 
 app-logs:
-	docker compose --env-file .env.app -f docker-compose.app.yml logs -f --tail=200
+	docker compose logs -f --tail=200

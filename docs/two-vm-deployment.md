@@ -47,10 +47,10 @@ Use private IPs for all VM-to-VM traffic when the cloud network supports it.
 
 | File | VM | Purpose |
 | --- | --- | --- |
-| `.env.monitoring.example` | Monitoring VM | Environment template for backend stack |
+| `.env.monitoring.example` | Monitoring VM | Environment template copied to `.env` for backend stack |
 | `docker-compose.monitoring.yml` | Monitoring VM | Grafana, Loki, Mimir, Tempo, Prometheus, MinIO |
 | `configs/prometheus/prometheus.two-vm.yml` | Monitoring VM | Scrapes both Monitoring VM and App VM targets |
-| `.env.app.example` | App VM | Environment template for monitored app stack |
+| `.env.app.example` | App VM | Environment template copied to `.env` for monitored app stack |
 | `docker-compose.app.yml` | App VM | Demo App, Node Exporter, Promtail |
 | `configs/promtail/promtail-app-config.yaml` | App VM | Pushes App VM logs to Monitoring VM Loki |
 
@@ -61,12 +61,13 @@ The original `docker-compose.yml` remains available for single-VM local validati
 Copy the repository to the Monitoring VM, then create the environment file:
 
 ```bash
-cp .env.monitoring.example .env.monitoring
+cp .env.monitoring.example .env
 ```
 
-Edit `.env.monitoring`:
+Edit `.env`:
 
 ```bash
+COMPOSE_FILE=docker-compose.monitoring.yml
 APP_VM_PRIVATE_IP=<app-vm-private-ip>
 GRAFANA_ADMIN_PASSWORD=<strong-password>
 MINIO_ROOT_PASSWORD=<strong-password>
@@ -75,8 +76,8 @@ MINIO_ROOT_PASSWORD=<strong-password>
 Start the Monitoring VM stack:
 
 ```bash
-make monitoring-up
-make monitoring-ps
+docker compose up -d
+docker compose ps
 ```
 
 Grafana should be available at:
@@ -90,12 +91,13 @@ http://<monitoring-vm-public-ip>:3000
 Copy the repository to the App VM, then create the environment file:
 
 ```bash
-cp .env.app.example .env.app
+cp .env.app.example .env
 ```
 
-Edit `.env.app`:
+Edit `.env`:
 
 ```bash
+COMPOSE_FILE=docker-compose.app.yml
 MONITORING_VM_PRIVATE_IP=<monitoring-vm-private-ip>
 APP_HOST_LABEL=app-vm
 ```
@@ -103,8 +105,8 @@ APP_HOST_LABEL=app-vm
 Start the App VM stack:
 
 ```bash
-make app-up
-make app-ps
+docker compose up -d --build
+docker compose ps
 ```
 
 ## Validation

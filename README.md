@@ -71,17 +71,17 @@ runs on a Monitoring VM.
 Monitoring VM:
 
 ```bash
-cp .env.monitoring.example .env.monitoring
+cp .env.monitoring.example .env
 # edit APP_VM_PRIVATE_IP and passwords
-make monitoring-up
+docker compose up -d
 ```
 
 App VM:
 
 ```bash
-cp .env.app.example .env.app
+cp .env.app.example .env
 # edit MONITORING_VM_PRIVATE_IP and APP_HOST_LABEL
-make app-up
+docker compose up -d --build
 ```
 
 See `docs/two-vm-deployment.md` for the full network flow and validation steps.
