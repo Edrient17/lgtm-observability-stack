@@ -29,7 +29,9 @@ Grafana <- Loki / Mimir / Prometheus / Tempo datasources
 | Prometheus | 9090 | Scrape and remote write | Localhost only |
 | Node Exporter | 9100 | VM metrics | Localhost only |
 | MinIO Console | 9001 | Object storage console | Localhost only |
-| Demo App | 8080 | Synthetic app for logs/metrics/traces | Localhost only |
+| API Service | 8080 | MSA entrypoint for logs/metrics/traces | Localhost only |
+| Order Service | 8081 | MSA downstream order workflow | Localhost only |
+| Payment Service | 8082 | MSA downstream payment workflow | Localhost only |
 
 ## Prerequisites
 
@@ -110,6 +112,7 @@ Manual queries:
 up
 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
 rate(demo_app_requests_total[5m])
+sum by (service) (rate(demo_app_requests_total[5m]))
 ```
 
 ```logql
@@ -118,7 +121,7 @@ rate(demo_app_requests_total[5m])
 ```
 
 ```traceql
-{ resource.service.name = "demo-app" }
+{ resource.service.name = "api-service" }
 ```
 
 ## Key Files

@@ -43,9 +43,12 @@ for _ in $(seq 1 "$request_count"); do
   if [ "$(rand_percent)" -lt "$error_chance" ]; then
     request "/error"
   else
-    case $((RANDOM % 4)) in
+    case $((RANDOM % 6)) in
       0)
         request "/"
+        ;;
+      1 | 2 | 3)
+        request "/checkout"
         ;;
       *)
         request "/work"

@@ -32,7 +32,7 @@ scrape_configs:
           instance: app-vm
           vm_role: app
 
-  - job_name: demo-app
+  - job_name: msa-demo
     metrics_path: /metrics
     static_configs:
       - targets:
@@ -40,6 +40,19 @@ scrape_configs:
         labels:
           instance: app-vm
           vm_role: app
+          app_service: api-service
+      - targets:
+          - app-vm:8081
+        labels:
+          instance: app-vm
+          vm_role: app
+          app_service: order-service
+      - targets:
+          - app-vm:8082
+        labels:
+          instance: app-vm
+          vm_role: app
+          app_service: payment-service
 
   - job_name: grafana
     metrics_path: /metrics

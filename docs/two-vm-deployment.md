@@ -20,7 +20,9 @@ Monitoring VM
   - Node Exporter for monitoring VM metrics
 
 App VM
-  - Demo App
+  - API Service
+  - Order Service
+  - Payment Service
   - Node Exporter for app VM metrics
   - Promtail for app VM logs
 ```
@@ -34,7 +36,9 @@ App VM -> Monitoring VM
   - 4318/tcp: Optional OTLP HTTP receiver
 
 Monitoring VM -> App VM
-  - 8080/tcp: Prometheus scrapes Demo App metrics
+  - 8080/tcp: Prometheus scrapes API Service metrics
+  - 8081/tcp: Prometheus scrapes Order Service metrics
+  - 8082/tcp: Prometheus scrapes Payment Service metrics
   - 9100/tcp: Prometheus scrapes Node Exporter metrics
 
 User -> Monitoring VM
@@ -51,7 +55,7 @@ Use private IPs for all VM-to-VM traffic when the cloud network supports it.
 | `docker-compose.monitoring.yml` | Monitoring VM | Grafana, Loki, Mimir, Tempo, Prometheus, MinIO |
 | `configs/prometheus/prometheus.two-vm.yml` | Monitoring VM | Scrapes both Monitoring VM and App VM targets |
 | `.env.app.example` | App VM | Environment template copied to `.env` for monitored app stack |
-| `docker-compose.app.yml` | App VM | Demo App, Node Exporter, Promtail |
+| `docker-compose.app.yml` | App VM | API Service, Order Service, Payment Service, Node Exporter, Promtail |
 | `configs/promtail/promtail-app-config.yaml` | App VM | Pushes App VM logs to Monitoring VM Loki |
 
 The original `docker-compose.yml` remains available for single-VM local validation.
@@ -116,6 +120,8 @@ From the Monitoring VM, check whether Prometheus can reach the App VM:
 ```bash
 curl http://<app-vm-private-ip>:9100/metrics
 curl http://<app-vm-private-ip>:8080/metrics
+curl http://<app-vm-private-ip>:8081/metrics
+curl http://<app-vm-private-ip>:8082/metrics
 ```
 
 From the App VM, check whether Loki and the OTel Collector are reachable:
@@ -131,6 +137,7 @@ Generate sample app traffic on the App VM:
 curl http://localhost:8080/
 curl http://localhost:8080/work
 curl http://localhost:8080/error
+curl http://localhost:8080/checkout
 ```
 
 For multi-day observation, register the random traffic script on the App VM:
@@ -155,9 +162,11 @@ mkdir -p /home/ubuntu/lgtm-observability-stack/logs
 Then check Grafana:
 
 - Metrics: `up`, `rate(demo_app_requests_total[5m])`
+- MSA metrics: `sum by (service) (rate(demo_app_requests_total[5m]))`
 - VM metrics: CPU, disk, filesystem, and network panels in the VM Metrics dashboard
 - Logs: `{job="docker", host="app-vm"}`
-- Traces: `{ resource.service.name = "demo-app" }`
+- Traces: `{ resource.service.name = "api-service" }`
+- MSA traces: `{ resource.service.name = "api-service" || resource.service.name = "order-service" || resource.service.name = "payment-service" }`
 
 ## Security Group Checklist
 
@@ -172,6 +181,8 @@ Monitoring VM inbound:
 App VM inbound:
 
 - `8080/tcp` from Monitoring VM private IP
+- `8081/tcp` from Monitoring VM private IP
+- `8082/tcp` from Monitoring VM private IP
 - `9100/tcp` from Monitoring VM private IP
 - `22/tcp` from your IP
 
