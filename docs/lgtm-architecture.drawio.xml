@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="LGTM Architecture" id="lgtm-observability-stack">
+    <mxGraphModel dx="3757" dy="2238" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="security-group" parent="1" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=none;strokeColor=light-dark(#000000,#FF9999);" value="" vertex="1">
+          <mxGeometry height="1760" width="2080" x="80" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="cloud-vm" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=light-dark(#000000,#FFCC99);" value="" vertex="1">
+          <mxGeometry height="1640" width="1990" x="130" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="docker-network" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;fontSize=13;strokeColor=light-dark(#000000,#99CCFF);" value="" vertex="1">
+          <mxGeometry height="1460" width="1870" x="170" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="title" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=22;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;" value="LGTM Observability Stack" vertex="1">
+          <mxGeometry height="40" width="380" x="90" y="-240" as="geometry" />
+        </mxCell>
+        <mxCell id="user" parent="1" style="whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#CCFF99);" value="User / Administrator" vertex="1">
+          <mxGeometry height="40" width="200" x="520" y="-40" as="geometry" />
+        </mxCell>
+        <mxCell id="sg-label" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=15;fontFamily=JetBrains Mono;fontSource=https://fonts.googleapis.com/css?family=JetBrains+Mono;" value="Security Group" vertex="1">
+          <mxGeometry height="40" width="150" x="100" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="sg-rule" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=13;fontFamily=JetBrains Mono;fontSource=https://fonts.googleapis.com/css?family=JetBrains+Mono;align=left;" value="Inbound allowed&lt;div&gt;- TCP 3000 Grafana only&lt;/div&gt;&lt;div&gt;Other service ports: 127.0.0.1 binding&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="410" x="270" y="118" as="geometry" />
+        </mxCell>
+        <mxCell id="vm-label" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=15;fontFamily=JetBrains Mono;fontSource=https://fonts.googleapis.com/css?family=JetBrains+Mono;" value="Cloud VM (Ubuntu 22.04)" vertex="1">
+          <mxGeometry height="40" width="260" x="150" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="network-label" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=15;fontFamily=JetBrains Mono;fontSource=https://fonts.googleapis.com/css?family=JetBrains+Mono;" value="Docker network: observability" vertex="1">
+          <mxGeometry height="40" width="320" x="200" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="http-label" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=13;fontFamily=JetBrains Mono;fontSource=https://fonts.googleapis.com/css?family=JetBrains+Mono;" value="HTTP :3000 (Grafana UI)" vertex="1">
+          <mxGeometry height="40" width="250" x="630" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="grafana" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Grafana&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: grafana&lt;/div&gt;&lt;div&gt;port: 3000/tcp external&lt;/div&gt;&lt;div&gt;dashboards + datasources&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="210" x="900" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="demo-app" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Demo App&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: demo-app&lt;/div&gt;&lt;div&gt;port: 8080/tcp local&lt;/div&gt;&lt;div&gt;JSON logs, /metrics, OTLP traces&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="230" x="580" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="promtail" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Promtail&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: promtail&lt;/div&gt;&lt;div&gt;tails /var/log and Docker logs&lt;/div&gt;&lt;div&gt;extracts trace_id label&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="230" x="890" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="loki" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Loki&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: loki&lt;/div&gt;&lt;div&gt;port: 3100/tcp local&lt;/div&gt;&lt;div&gt;filesystem retention: 168h&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="210" x="1160" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="prometheus" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Prometheus&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: prometheus&lt;/div&gt;&lt;div&gt;port: 9090/tcp local&lt;/div&gt;&lt;div&gt;scrape + rules + remote_write&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="230" x="590" y="793" as="geometry" />
+        </mxCell>
+        <mxCell id="mimir" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Mimir&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: mimir&lt;/div&gt;&lt;div&gt;port: 9009/tcp local&lt;/div&gt;&lt;div&gt;monolithic mode, 168h retention&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="230" x="990" y="793" as="geometry" />
+        </mxCell>
+        <mxCell id="otel" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;OTel Collector&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: otel-collector&lt;/div&gt;&lt;div&gt;ports: 4317, 4318 local&lt;/div&gt;&lt;div&gt;batch traces to Tempo&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="230" x="860" y="1243" as="geometry" />
+        </mxCell>
+        <mxCell id="tempo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Tempo&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: tempo&lt;/div&gt;&lt;div&gt;port: 3200/tcp local&lt;/div&gt;&lt;div&gt;TraceQL + metrics generator&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="230" x="870" y="1448" as="geometry" />
+        </mxCell>
+        <mxCell id="node-exporter" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Node Exporter&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: node-exporter&lt;/div&gt;&lt;div&gt;port: 9100/tcp local&lt;/div&gt;&lt;div&gt;VM metrics&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="220" x="660" y="1013" as="geometry" />
+        </mxCell>
+        <mxCell id="minio" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;fontFamily=JetBrains Mono;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DJetBrains%2BMono;strokeColor=light-dark(#000000,#9999FF);" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;MinIO&lt;/font&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;name: minio&lt;/div&gt;&lt;div&gt;console: 9001/tcp local&lt;/div&gt;&lt;div&gt;buckets: mimir-* , tempo-traces&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="230" x="1090" y="1003" as="geometry" />
+        </mxCell>
+        <mxCell id="volume-label" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=13;fontFamily=JetBrains Mono;fontSource=https://fonts.googleapis.com/css?family=JetBrains+Mono;align=left;" value="Docker volumes&lt;div&gt;grafana-data, loki-data, mimir-data,&lt;/div&gt;&lt;div&gt;minio-data, prometheus-data, tempo-data&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="430" x="-380" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="label-query" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=13;fontFamily=JetBrains Mono;fontSource=https://fonts.googleapis.com/css?family=JetBrains+Mono;align=left;" value="Grafana queries&lt;div&gt;LogQL, PromQL, TraceQL&lt;/div&gt;&lt;div&gt;Loki derivedFields link logs to Tempo&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="360" x="-350" y="345" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,172 @@
+name: lgtm-monitoring-stack
+
+services:
+  minio:
+    image: quay.io/minio/minio:${MINIO_VERSION:-RELEASE.2025-09-07T16-13-09Z}
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lgtm}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-lgtm-secret-key}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "127.0.0.1:9001:9001"
+    networks:
+      - observability
+
+  minio-init:
+    image: quay.io/minio/mc:${MINIO_MC_VERSION:-RELEASE.2025-08-13T08-35-41Z}
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lgtm}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-lgtm-secret-key}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        until mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do
+          echo "waiting for minio..."
+          sleep 2
+        done
+        mc mb --ignore-existing local/mimir-blocks
+        mc mb --ignore-existing local/mimir-ruler
+        mc mb --ignore-existing local/mimir-alertmanager
+        mc mb --ignore-existing local/tempo-traces
+    networks:
+      - observability
+    restart: "no"
+
+  loki:
+    image: grafana/loki:${LOKI_VERSION:-3.6.11}
+    command:
+      - -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./configs/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - observability
+    depends_on:
+      - minio-init
+
+  mimir:
+    image: grafana/mimir:${MIMIR_VERSION:-3.1.2}
+    command:
+      - -config.file=/etc/mimir/mimir-config.yaml
+      - -config.expand-env=true
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lgtm}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-lgtm-secret-key}
+    volumes:
+      - ./configs/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
+      - mimir-data:/data/mimir
+    ports:
+      - "127.0.0.1:9009:9009"
+    networks:
+      - observability
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+
+  tempo:
+    image: grafana/tempo:${TEMPO_VERSION:-2.10.7}
+    command:
+      - -config.file=/etc/tempo/tempo-config.yaml
+      - -config.expand-env=true
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lgtm}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-lgtm-secret-key}
+    volumes:
+      - ./configs/tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "127.0.0.1:3200:3200"
+    networks:
+      - observability
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+      mimir:
+        condition: service_started
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:${OTEL_COLLECTOR_VERSION:-0.155.0}
+    command:
+      - --config=/etc/otelcol/otel-collector-config.yaml
+    volumes:
+      - ./configs/otel-collector/otel-collector-config.yaml:/etc/otelcol/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - observability
+    depends_on:
+      - tempo
+
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-v3.5.4}
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./configs/prometheus/prometheus.two-vm.yml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    extra_hosts:
+      - "app-vm:${APP_VM_PRIVATE_IP}"
+    networks:
+      - observability
+    depends_on:
+      - mimir
+      - node-exporter
+
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.11.1}
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    ports:
+      - "127.0.0.1:9100:9100"
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana-oss:${GRAFANA_VERSION:-12.4.3}
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_DEFAULT_THEME: light
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - observability
+    depends_on:
+      - loki
+      - mimir
+      - tempo
+      - prometheus
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  grafana-data:
+  loki-data:
+  mimir-data:
+  minio-data:
+  prometheus-data:
+  tempo-data:

@@ -1,0 +1,52 @@
+name: lgtm-app-stack
+
+services:
+  demo-app:
+    build:
+      context: ./demo-app
+    environment:
+      OTEL_SERVICE_NAME: demo-app
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://${MONITORING_VM_PRIVATE_IP}:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      LOG_LEVEL: INFO
+    ports:
+      - "8080:8080"
+    networks:
+      - app-observability
+
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.11.1}
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    ports:
+      - "9100:9100"
+    networks:
+      - app-observability
+
+  promtail:
+    image: grafana/promtail:${PROMTAIL_VERSION:-3.6.11}
+    command:
+      - -config.file=/etc/promtail/promtail-app-config.yaml
+      - -config.expand-env=true
+    environment:
+      LOKI_PUSH_URL: http://${MONITORING_VM_PRIVATE_IP}:3100/loki/api/v1/push
+      APP_HOST_LABEL: ${APP_HOST_LABEL:-app-vm}
+    volumes:
+      - ./configs/promtail/promtail-app-config.yaml:/etc/promtail/promtail-app-config.yaml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - promtail-positions:/tmp
+    networks:
+      - app-observability
+    depends_on:
+      - demo-app
+
+networks:
+  app-observability:
+    driver: bridge
+
+volumes:
+  promtail-positions:

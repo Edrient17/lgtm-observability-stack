@@ -41,9 +41,13 @@ Grafana <- Loki / Mimir / Prometheus / Tempo datasources
 
 Container image versions are pinned for reproducibility. See `docs/version-policy.md` before upgrading any component.
 
-For VM deployment, follow `docs/deployment.md`.
+For single-VM deployment, follow `docs/deployment.md`. For a more production-like
+two-VM layout that separates the monitored app from the observability backend,
+follow `docs/two-vm-deployment.md`.
 
 ## Quick Start
+
+This starts the original single-VM validation stack.
 
 ```bash
 cp .env.example .env
@@ -58,6 +62,29 @@ Grafana:
 - Default password: `admin`
 
 MinIO, Prometheus, Loki, Mimir, Tempo, OTel Collector, Node Exporter, and Demo App are bound to `127.0.0.1` by default. On the VM security group, open Grafana `3000/tcp` only unless you have a specific debugging reason.
+
+## Production-Like Two-VM Mode
+
+Use this mode when the Demo App runs on a separate App VM and the LGTM backend
+runs on a Monitoring VM.
+
+Monitoring VM:
+
+```bash
+cp .env.monitoring.example .env.monitoring
+# edit APP_VM_PRIVATE_IP and passwords
+make monitoring-up
+```
+
+App VM:
+
+```bash
+cp .env.app.example .env.app
+# edit MONITORING_VM_PRIVATE_IP and APP_HOST_LABEL
+make app-up
+```
+
+See `docs/two-vm-deployment.md` for the full network flow and validation steps.
 
 ## Generate Sample Data
 
@@ -99,9 +126,13 @@ rate(demo_app_requests_total[5m])
 | Path | Description |
 | --- | --- |
 | `docker-compose.yml` | Single-command runtime definition |
+| `docker-compose.monitoring.yml` | Monitoring VM runtime definition |
+| `docker-compose.app.yml` | App VM runtime definition |
 | `configs/loki/loki-config.yaml` | Loki filesystem storage and retention |
 | `configs/promtail/promtail-config.yaml` | System and Docker log scraping |
+| `configs/promtail/promtail-app-config.yaml` | App VM log scraping and Loki push config |
 | `configs/prometheus/prometheus.yml` | Scrape jobs and Mimir remote write |
+| `configs/prometheus/prometheus.two-vm.yml` | Two-VM scrape jobs for Monitoring VM and App VM |
 | `configs/prometheus/rules/node-alerts.yml` | CPU, disk, and pipeline alert rules |
 | `configs/mimir/mimir-config.yaml` | Mimir monolithic mode with MinIO object storage |
 | `configs/tempo/tempo-config.yaml` | Tempo OTLP receiver and MinIO trace storage |
