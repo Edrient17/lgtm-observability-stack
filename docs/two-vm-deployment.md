@@ -133,6 +133,25 @@ curl http://localhost:8080/work
 curl http://localhost:8080/error
 ```
 
+For multi-day observation, register the random traffic script on the App VM:
+
+```bash
+chmod +x ./scripts/random-demo-traffic.sh
+crontab -e
+```
+
+Example cron entry:
+
+```cron
+* * * * * cd /home/ubuntu/lgtm-observability-stack && DEMO_APP_URL=http://localhost:8080 ./scripts/random-demo-traffic.sh >> /home/ubuntu/lgtm-observability-stack/logs/random-demo-traffic.log 2>&1
+```
+
+Create the log directory before enabling the cron entry:
+
+```bash
+mkdir -p /home/ubuntu/lgtm-observability-stack/logs
+```
+
 Then check Grafana:
 
 - Metrics: `up`, `rate(demo_app_requests_total[5m])`
