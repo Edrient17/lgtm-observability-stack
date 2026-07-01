@@ -50,7 +50,7 @@ follow `docs/two-vm-deployment.md`.
 This starts the original single-VM validation stack.
 
 ```bash
-cp .env.example .env
+cp .env.single-vm.example .env
 docker compose up -d --build
 docker compose ps
 ```

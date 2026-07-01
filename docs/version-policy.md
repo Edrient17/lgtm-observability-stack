@@ -28,10 +28,9 @@ This project pins container image tags instead of using `latest`.
 
 Upgrade one component family at a time:
 
-1. Update `.env.example` and the fallback tag in `docker-compose.yml`.
+1. Update `.env.single-vm.example`, `.env.monitoring.example`, `.env.app.example`, and the fallback tag in the relevant Compose file.
 2. Run `docker compose config`.
 3. Start the stack in a clean environment.
 4. Run `bash scripts/healthcheck.sh`.
 5. Generate traffic with `bash scripts/generate-load.sh`.
 6. Check Grafana datasource health and dashboards.
-

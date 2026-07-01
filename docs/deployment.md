@@ -9,7 +9,7 @@ Install Docker and clone the repository on the VM.
 ```bash
 git clone <REPOSITORY_URL>
 cd lgtm-observability-stack
-cp .env.example .env
+cp .env.single-vm.example .env
 ```
 
 Open only Grafana externally:
