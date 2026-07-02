@@ -33,13 +33,19 @@
           "tableType": "traces"
         }
       ],
-      "title": "MSA Checkout Traces",
+      "title": "Trace Search",
       "type": "table"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -68,6 +74,12 @@
       "datasource": {
         "type": "prometheus",
         "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -109,6 +121,6 @@
   "timezone": "browser",
   "title": "Traces Overview",
   "uid": "traces-overview",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

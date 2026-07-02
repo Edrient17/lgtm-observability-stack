@@ -16,11 +16,67 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 0
       },
       "id": 1,
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (service) (count_over_time({job=\"docker\", host=\"app-vm\"} | json [5m]))",
+          "legendFormat": "{{service}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Logs by Service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (level) (count_over_time({job=\"docker\", host=\"app-vm\"} | json [5m]))",
+          "legendFormat": "{{level}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Logs by Level",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -38,69 +94,13 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{job=\"docker\", host=\"app-vm\"}",
+          "expr": "{job=\"docker\", host=\"app-vm\"} | json | level=\"ERROR\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "App VM Service Logs",
+      "title": "Recent Errors",
       "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 2,
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "editorMode": "code",
-          "expr": "sum by (level) (count_over_time({job=\"docker\"} | json [5m]))",
-          "legendFormat": "{{level}}",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Log Volume by Level",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
-      "id": 3,
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"docker\", host=\"app-vm\"} | json | level=\"ERROR\" [5m]))",
-          "legendFormat": "errors",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "MSA Error Logs",
-      "type": "timeseries"
     }
   ],
   "refresh": "10s",
@@ -119,6 +119,6 @@
   "timezone": "browser",
   "title": "Logs Overview",
   "uid": "logs-overview",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

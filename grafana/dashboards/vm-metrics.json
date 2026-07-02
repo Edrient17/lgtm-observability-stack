@@ -22,7 +22,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 0
       },
@@ -56,8 +56,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 12,
         "y": 0
       },
       "id": 2,
@@ -90,9 +90,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 0
+        "w": 12,
+        "x": 0,
+        "y": 8
       },
       "id": 3,
       "targets": [
@@ -103,7 +103,7 @@
           },
           "editorMode": "code",
           "expr": "100 * (1 - (node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|squashfs\"}))",
-          "legendFormat": "{{mountpoint}}",
+          "legendFormat": "{{instance}} {{mountpoint}}",
           "range": true,
           "refId": "A"
         }
@@ -116,10 +116,16 @@
         "type": "prometheus",
         "uid": "mimir"
       },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 8,
-        "w": 24,
-        "x": 0,
+        "w": 12,
+        "x": 12,
         "y": 8
       },
       "id": 4,
@@ -130,13 +136,24 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (service, endpoint, status) (rate(demo_app_requests_total[5m]))",
-          "legendFormat": "{{service}} {{endpoint}} {{status}}",
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{device!~\"lo|docker.*|br-.*|veth.*\"}[5m]))",
+          "legendFormat": "rx {{instance}}",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "editorMode": "code",
+          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{device!~\"lo|docker.*|br-.*|veth.*\"}[5m]))",
+          "legendFormat": "tx {{instance}}",
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "MSA Request Rate",
+      "title": "Network Throughput",
       "type": "timeseries"
     }
   ],
@@ -144,7 +161,8 @@
   "schemaVersion": 39,
   "tags": [
     "mimir",
-    "metrics"
+    "metrics",
+    "vm"
   ],
   "templating": {
     "list": []
@@ -156,6 +174,6 @@
   "timezone": "browser",
   "title": "VM Metrics",
   "uid": "vm-metrics",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
