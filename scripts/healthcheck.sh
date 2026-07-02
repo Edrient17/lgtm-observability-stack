@@ -31,6 +31,9 @@ if [ "$compose_file" = "docker-compose.monitoring.yml" ]; then
   curl -fsS "http://${app_ip}:8080/metrics" >/dev/null
   curl -fsS "http://${app_ip}:8081/metrics" >/dev/null
   curl -fsS "http://${app_ip}:8082/metrics" >/dev/null
+  curl -fsS "http://${app_ip}:8083/metrics" >/dev/null
+  curl -fsS "http://${app_ip}:8084/metrics" >/dev/null
+  curl -fsS "http://${app_ip}:8085/metrics" >/dev/null
   curl -fsS "http://${app_ip}:9100/metrics" >/dev/null
 
   echo
@@ -41,9 +44,14 @@ elif [ "$compose_file" = "docker-compose.app.yml" ]; then
   echo
   echo "[2/4] App VM local services"
   curl -fsS http://localhost:8080/ >/dev/null
+  curl -fsS http://localhost:8080/browse >/dev/null
+  curl -fsS http://localhost:8080/cart/add >/dev/null || true
   curl -fsS http://localhost:8080/checkout >/dev/null || true
   curl -fsS http://localhost:8081/metrics >/dev/null
   curl -fsS http://localhost:8082/metrics >/dev/null
+  curl -fsS http://localhost:8083/metrics >/dev/null
+  curl -fsS http://localhost:8084/metrics >/dev/null
+  curl -fsS http://localhost:8085/metrics >/dev/null
   curl -fsS http://localhost:9100/metrics >/dev/null
 
   echo

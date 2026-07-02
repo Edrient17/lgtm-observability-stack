@@ -43,11 +43,17 @@ for _ in $(seq 1 "$request_count"); do
   if [ "$(rand_percent)" -lt "$error_chance" ]; then
     request "/error"
   else
-    case $((RANDOM % 6)) in
+    case $((RANDOM % 10)) in
       0)
         request "/"
         ;;
-      1 | 2 | 3)
+      1 | 2 | 3 | 4)
+        request "/browse"
+        ;;
+      5 | 6 | 7)
+        request "/cart/add"
+        ;;
+      8)
         request "/checkout"
         ;;
       *)

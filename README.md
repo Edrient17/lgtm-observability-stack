@@ -2,46 +2,73 @@
 
 Two-VM LGTM observability stack for a small MSA-style demo workload.
 
-The project is now fixed to this topology:
+The project is fixed to a two-VM topology:
+
+![LGTM two-VM MSA architecture](docs/lgtm-architecture.svg)
 
 ```text
-Monitoring VM
-  - Grafana
-  - Loki
-  - Mimir
-  - Tempo
-  - Prometheus
-  - OpenTelemetry Collector
-  - MinIO
-  - Node Exporter
-
-App VM
-  - api-service
-  - order-service
-  - payment-service
-  - Promtail
-  - Node Exporter
+                         Browser / cron
+                              |
+                              | /browse, /cart/add, /checkout
+                              v
++--------------------------------------------------------------------------+
+| App VM                                                                   |
+|                                                                          |
+|  +-------------+      +-----------------+      +-------------------+      |
+|  | api-service |----->| catalog-service |----->| inventory-service |      |
+|  | :8080       |      | :8081           |      | :8082             |      |
+|  +------+------+      +-----------------+      +---------^---------+      |
+|         |                                                |                |
+|         |              +--------------+                  |                |
+|         +------------->| cart-service |------------------+                |
+|         |              | :8083        |                                   |
+|         |              +------+-------+                                   |
+|         |                     |                                           |
+|         v                     v                                           |
+|  +---------------+      +-----------------+                               |
+|  | order-service |----->| payment-service |                               |
+|  | :8084         |      | :8085           |                               |
+|  +---------------+      +-----------------+                               |
+|                                                                          |
+|  Promtail reads Docker logs. Node Exporter exposes VM metrics on :9100.   |
++--------------------------------------------------------------------------+
+             | logs 3100              | OTLP gRPC 4317        ^ scrape
+             v                        v                       | 8080-8085,9100
++--------------------------------------------------------------------------+
+| Monitoring VM                                                            |
+|                                                                          |
+|  Grafana <-> Loki       Grafana <-> Mimir       Grafana <-> Tempo         |
+|               ^                    ^                       ^             |
+|               |                    |                       |             |
+|            Promtail          Prometheus              OTel Collector       |
+|                                  |                         |             |
+|                              remote_write              traces             |
+|                                  v                         v             |
+|                                Mimir                    Tempo -> MinIO     |
++--------------------------------------------------------------------------+
 ```
 
 ## Data Flow
 
+- Logs: App VM Docker logs -> Promtail -> Loki -> Grafana
+- Metrics: Prometheus pulls App VM services and Node Exporter -> Mimir -> Grafana
+- Traces: MSA services -> OTel Collector over OTLP gRPC -> Tempo -> Grafana
+- Storage: Mimir and Tempo store blocks in MinIO
+
+## Demo Request Flows
+
 ```text
-User / Traffic
-  -> api-service :8080
-      -> order-service :8081
-          -> payment-service :8082
+/browse
+  api-service -> catalog-service -> inventory-service
 
-Logs:
-  App VM Docker logs -> Promtail -> Loki -> Grafana
+/cart/add
+  api-service -> cart-service -> catalog-service
+                              -> inventory-service
 
-Metrics:
-  Prometheus -> App VM services / Node Exporter -> Mimir -> Grafana
-
-Traces:
-  api-service/order-service/payment-service -> OTel Collector -> Tempo -> Grafana
-
-Storage:
-  Mimir + Tempo -> MinIO
+/checkout
+  api-service -> cart-service
+              -> order-service -> inventory-service
+                               -> payment-service
 ```
 
 ## Deployment
@@ -77,9 +104,12 @@ See `docs/two-vm-deployment.md` for setup, security group rules, and validation 
 | Monitoring | OTel Collector | 4317, 4318 | Trace ingestion |
 | Monitoring | Prometheus | 9090 | Scrape and remote write |
 | Monitoring | MinIO | 9000, 9001 | Object storage |
-| App | api-service | 8080 | MSA entrypoint |
-| App | order-service | 8081 | Downstream order workflow |
-| App | payment-service | 8082 | Downstream payment workflow |
+| App | api-service | 8080 | Public demo entrypoint |
+| App | catalog-service | 8081 | Product catalog |
+| App | inventory-service | 8082 | Stock checks and reservation |
+| App | cart-service | 8083 | Cart workflow |
+| App | order-service | 8084 | Checkout orchestration |
+| App | payment-service | 8085 | Payment authorization |
 | App | Node Exporter | 9100 | App VM system metrics |
 
 Only Grafana should be exposed to the user's public IP. VM-to-VM traffic should use private IP security group rules.
@@ -89,8 +119,9 @@ Only Grafana should be exposed to the user's public IP. VM-to-VM traffic should 
 Short manual test on the App VM:
 
 ```bash
+curl http://localhost:8080/browse
+curl http://localhost:8080/cart/add
 curl http://localhost:8080/checkout
-curl http://localhost:8080/work
 curl http://localhost:8080/error
 ```
 
@@ -129,6 +160,7 @@ TraceQL:
 
 ```traceql
 { resource.service.name = "api-service" }
+{ resource.service.name = "api-service" || resource.service.name = "cart-service" || resource.service.name = "order-service" }
 ```
 
 ## Key Files
@@ -141,7 +173,7 @@ TraceQL:
 | `.env.app.example` | App VM environment template |
 | `configs/prometheus/prometheus.two-vm.yml` | Prometheus scrape config for both VMs |
 | `configs/promtail/promtail-app-config.yaml` | App VM Promtail config |
-| `msa-demo` | Shared image used by api/order/payment services |
+| `msa-demo` | Shared image used by all six MSA demo services |
 | `scripts/random-demo-traffic.sh` | Random traffic generator for long-running observation |
 
 ## Documentation

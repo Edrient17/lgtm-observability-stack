@@ -21,6 +21,9 @@ Monitoring VM
 
 App VM
   - API Service
+  - Catalog Service
+  - Inventory Service
+  - Cart Service
   - Order Service
   - Payment Service
   - Node Exporter for app VM metrics
@@ -32,13 +35,16 @@ App VM
 ```text
 App VM -> Monitoring VM
   - 3100/tcp: Promtail pushes logs to Loki
-  - 4317/tcp: MSA services export OTLP traces to OTel Collector
+  - 4317/tcp: MSA services export OTLP gRPC traces to OTel Collector
   - 4318/tcp: Optional OTLP HTTP receiver
 
 Monitoring VM -> App VM
   - 8080/tcp: Prometheus scrapes API Service metrics
-  - 8081/tcp: Prometheus scrapes Order Service metrics
-  - 8082/tcp: Prometheus scrapes Payment Service metrics
+  - 8081/tcp: Prometheus scrapes Catalog Service metrics
+  - 8082/tcp: Prometheus scrapes Inventory Service metrics
+  - 8083/tcp: Prometheus scrapes Cart Service metrics
+  - 8084/tcp: Prometheus scrapes Order Service metrics
+  - 8085/tcp: Prometheus scrapes Payment Service metrics
   - 9100/tcp: Prometheus scrapes Node Exporter metrics
 
 User -> Monitoring VM
@@ -55,7 +61,7 @@ Use private IPs for all VM-to-VM traffic when the cloud network supports it.
 | `docker-compose.monitoring.yml` | Monitoring VM | Grafana, Loki, Mimir, Tempo, Prometheus, MinIO |
 | `configs/prometheus/prometheus.two-vm.yml` | Monitoring VM | Scrapes both Monitoring VM and App VM targets |
 | `.env.app.example` | App VM | Environment template copied to `.env` for monitored app stack |
-| `docker-compose.app.yml` | App VM | API Service, Order Service, Payment Service, Node Exporter, Promtail |
+| `docker-compose.app.yml` | App VM | API, Catalog, Inventory, Cart, Order, Payment, Node Exporter, Promtail |
 | `configs/promtail/promtail-app-config.yaml` | App VM | Pushes App VM logs to Monitoring VM Loki |
 
 ## Monitoring VM Setup
@@ -120,6 +126,9 @@ curl http://<app-vm-private-ip>:9100/metrics
 curl http://<app-vm-private-ip>:8080/metrics
 curl http://<app-vm-private-ip>:8081/metrics
 curl http://<app-vm-private-ip>:8082/metrics
+curl http://<app-vm-private-ip>:8083/metrics
+curl http://<app-vm-private-ip>:8084/metrics
+curl http://<app-vm-private-ip>:8085/metrics
 ```
 
 From the App VM, check whether Loki and the OTel Collector are reachable:
@@ -133,9 +142,10 @@ Generate sample app traffic on the App VM:
 
 ```bash
 curl http://localhost:8080/
-curl http://localhost:8080/work
-curl http://localhost:8080/error
+curl http://localhost:8080/browse
+curl http://localhost:8080/cart/add
 curl http://localhost:8080/checkout
+curl http://localhost:8080/error
 ```
 
 For multi-day observation, register the random traffic script on the App VM:
@@ -164,7 +174,7 @@ Then check Grafana:
 - VM metrics: CPU, disk, filesystem, and network panels in the VM Metrics dashboard
 - Logs: `{job="docker", host="app-vm"}`
 - Traces: `{ resource.service.name = "api-service" }`
-- MSA traces: `{ resource.service.name = "api-service" || resource.service.name = "order-service" || resource.service.name = "payment-service" }`
+- MSA traces: `{ resource.service.name = "api-service" || resource.service.name = "cart-service" || resource.service.name = "order-service" }`
 
 ## Security Group Checklist
 
@@ -181,6 +191,9 @@ App VM inbound:
 - `8080/tcp` from Monitoring VM private IP
 - `8081/tcp` from Monitoring VM private IP
 - `8082/tcp` from Monitoring VM private IP
+- `8083/tcp` from Monitoring VM private IP
+- `8084/tcp` from Monitoring VM private IP
+- `8085/tcp` from Monitoring VM private IP
 - `9100/tcp` from Monitoring VM private IP
 - `22/tcp` from your IP
 

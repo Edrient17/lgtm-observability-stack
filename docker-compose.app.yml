@@ -18,11 +18,52 @@ services:
       OTEL_SERVICE_NAME: api-service
       SERVICE_ROLE: api
       PORT: "8080"
-      ORDER_SERVICE_URL: http://order-service:8081
+      CATALOG_SERVICE_URL: http://catalog-service:8081
+      INVENTORY_SERVICE_URL: http://inventory-service:8082
+      CART_SERVICE_URL: http://cart-service:8083
+      ORDER_SERVICE_URL: http://order-service:8084
     ports:
       - "8080:8080"
     depends_on:
+      - catalog-service
+      - inventory-service
+      - cart-service
       - order-service
+
+  catalog-service:
+    <<: *demo-service
+    environment:
+      <<: *demo-env
+      OTEL_SERVICE_NAME: catalog-service
+      SERVICE_ROLE: catalog
+      PORT: "8081"
+    ports:
+      - "8081:8081"
+
+  inventory-service:
+    <<: *demo-service
+    environment:
+      <<: *demo-env
+      OTEL_SERVICE_NAME: inventory-service
+      SERVICE_ROLE: inventory
+      PORT: "8082"
+    ports:
+      - "8082:8082"
+
+  cart-service:
+    <<: *demo-service
+    environment:
+      <<: *demo-env
+      OTEL_SERVICE_NAME: cart-service
+      SERVICE_ROLE: cart
+      PORT: "8083"
+      CATALOG_SERVICE_URL: http://catalog-service:8081
+      INVENTORY_SERVICE_URL: http://inventory-service:8082
+    ports:
+      - "8083:8083"
+    depends_on:
+      - catalog-service
+      - inventory-service
 
   order-service:
     <<: *demo-service
@@ -30,11 +71,13 @@ services:
       <<: *demo-env
       OTEL_SERVICE_NAME: order-service
       SERVICE_ROLE: order
-      PORT: "8081"
-      PAYMENT_SERVICE_URL: http://payment-service:8082
+      PORT: "8084"
+      INVENTORY_SERVICE_URL: http://inventory-service:8082
+      PAYMENT_SERVICE_URL: http://payment-service:8085
     ports:
-      - "8081:8081"
+      - "8084:8084"
     depends_on:
+      - inventory-service
       - payment-service
 
   payment-service:
@@ -43,9 +86,9 @@ services:
       <<: *demo-env
       OTEL_SERVICE_NAME: payment-service
       SERVICE_ROLE: payment
-      PORT: "8082"
+      PORT: "8085"
     ports:
-      - "8082:8082"
+      - "8085:8085"
 
   node-exporter:
     image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.11.1}
@@ -76,6 +119,9 @@ services:
       - app-observability
     depends_on:
       - api-service
+      - catalog-service
+      - inventory-service
+      - cart-service
       - order-service
       - payment-service
 
