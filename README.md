@@ -6,48 +6,6 @@ The project is fixed to a two-VM topology:
 
 ![LGTM two-VM MSA architecture](docs/lgtm-architecture.jpg)
 
-```text
-                         Browser / cron
-                              |
-                              | /browse, /cart/add, /checkout
-                              v
-+--------------------------------------------------------------------------+
-| App VM                                                                   |
-|                                                                          |
-|  +-------------+      +-----------------+      +-------------------+      |
-|  | api-service |----->| catalog-service |----->| inventory-service |      |
-|  | :8080       |      | :8081           |      | :8082             |      |
-|  +------+------+      +-----------------+      +---------^---------+      |
-|         |                                                |                |
-|         |              +--------------+                  |                |
-|         +------------->| cart-service |------------------+                |
-|         |              | :8083        |                                   |
-|         |              +------+-------+                                   |
-|         |                     |                                           |
-|         v                     v                                           |
-|  +---------------+      +-----------------+                               |
-|  | order-service |----->| payment-service |                               |
-|  | :8084         |      | :8085           |                               |
-|  +---------------+      +-----------------+                               |
-|                                                                          |
-|  Promtail reads Docker logs. Node Exporter exposes VM metrics on :9100.   |
-+--------------------------------------------------------------------------+
-             | logs 3100              | OTLP gRPC 4317        ^ scrape
-             v                        v                       | 8080-8085,9100
-+--------------------------------------------------------------------------+
-| Monitoring VM                                                            |
-|                                                                          |
-|  Grafana <-> Loki       Grafana <-> Mimir       Grafana <-> Tempo         |
-|               ^                    ^                       ^             |
-|               |                    |                       |             |
-|            Promtail          Prometheus              OTel Collector       |
-|                                  |                         |             |
-|                              remote_write              traces             |
-|                                  v                         v             |
-|                                Mimir                    Tempo -> MinIO     |
-+--------------------------------------------------------------------------+
-```
-
 ## Data Flow
 
 - Logs: App VM Docker logs -> Promtail -> Loki -> Grafana
@@ -112,7 +70,29 @@ See `docs/two-vm-deployment.md` for setup, security group rules, and validation 
 | App | payment-service | 8085 | Payment authorization |
 | App | Node Exporter | 9100 | App VM system metrics |
 
-Only Grafana should be exposed to the user's public IP. VM-to-VM traffic should use private IP security group rules.
+## Security Group Inbound Allowed
+
+Monitoring VM inbound:
+
+| Port | Source | Purpose |
+| ---: | --- | --- |
+| 22/tcp | Your IP | SSH access |
+| 3000/tcp | Your IP | Grafana Web UI |
+| 3100/tcp | App VM private IP | Promtail -> Loki log push |
+| 4317/tcp | App VM private IP | MSA services -> OTel Collector OTLP gRPC |
+
+App VM inbound:
+
+| Port | Source | Purpose |
+| ---: | --- | --- |
+| 22/tcp | Your IP | SSH access |
+| 8080/tcp | Monitoring VM private IP | API Service metrics scrape |
+| 8081/tcp | Monitoring VM private IP | Catalog Service metrics scrape |
+| 8082/tcp | Monitoring VM private IP | Inventory Service metrics scrape |
+| 8083/tcp | Monitoring VM private IP | Cart Service metrics scrape |
+| 8084/tcp | Monitoring VM private IP | Order Service metrics scrape |
+| 8085/tcp | Monitoring VM private IP | Payment Service metrics scrape |
+| 9100/tcp | Monitoring VM private IP | Node Exporter metrics scrape |
 
 ## Generate Traffic
 
