@@ -62,3 +62,12 @@ From the App VM:
 - [ ] `scripts/random-demo-traffic.sh` runs manually on the App VM.
 - [ ] Cron is registered for multi-day traffic generation.
 - [ ] `logs/random-demo-traffic.log` shows `/browse`, `/cart/add`, `/checkout`, `/work`, and `/error` requests.
+
+## Alerts
+
+- [ ] Prometheus loads `configs/prometheus/rules/node-alerts.yml`.
+- [ ] Grafana shows the `Alerts Overview` dashboard.
+- [ ] `MsaServiceDown` fires when one App VM service is stopped for about 1 minute.
+- [ ] `MsaHighErrorRate` fires when repeated `/error` requests are generated.
+- [ ] `AppVmNodeExporterDown` fires when App VM Node Exporter is stopped for about 1 minute.
+- [ ] Alert recovery is confirmed after each stopped container is started again.

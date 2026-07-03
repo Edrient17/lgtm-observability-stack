@@ -175,11 +175,13 @@ TraceQL:
 | `configs/promtail/promtail-app-config.yaml` | App VM Promtail config |
 | `msa-demo` | Shared image used by all six MSA demo services |
 | `scripts/random-demo-traffic.sh` | Random traffic generator for long-running observation |
+| `scripts/fault-injection.sh` | Controlled failure and recovery helper for alert testing |
 
 ## Documentation
 
 - `docs/architecture.md`
 - `docs/two-vm-deployment.md`
 - `docs/validation.md`
+- `docs/alert-scenarios.md`
 - `docs/troubleshooting.md`
 - `docs/version-policy.md`

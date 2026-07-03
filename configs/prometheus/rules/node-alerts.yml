@@ -44,3 +44,75 @@ groups:
           summary: "Tempo scrape target is down"
           description: "Prometheus cannot scrape Tempo metrics."
 
+      - alert: MimirTargetDown
+        expr: up{job="mimir"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mimir
+        annotations:
+          summary: "Mimir scrape target is down"
+          description: "Prometheus cannot scrape Mimir metrics."
+
+      - alert: ObservabilityPipelineTargetDown
+        expr: up{job="tempo"} == 0 or up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: observability-pipeline
+        annotations:
+          summary: "Observability ingestion dependency is unhealthy"
+          description: "At least one observability pipeline target is down. Check Loki and Tempo before validating logs or traces."
+
+  - name: msa-service-alerts
+    rules:
+      - alert: MsaServiceDown
+        expr: up{job="msa-demo"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: msa-demo
+        annotations:
+          summary: "MSA service target is down"
+          description: "Prometheus cannot scrape {{ $labels.app_service }} on {{ $labels.instance }}."
+
+      - alert: AppVmNodeExporterDown
+        expr: up{job="node-exporter", instance="app-vm"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: node-exporter
+        annotations:
+          summary: "App VM Node Exporter is down"
+          description: "Prometheus cannot scrape App VM system metrics."
+
+      - alert: MsaHighErrorRate
+        expr: |
+          (
+            sum by (service) (rate(demo_app_requests_total{endpoint!="metrics",status=~"5.."}[5m]))
+            /
+            clamp_min(sum by (service) (rate(demo_app_requests_total{endpoint!="metrics"}[5m])), 0.001)
+          ) > 0.2
+          and on (service)
+          sum by (service) (rate(demo_app_requests_total{endpoint!="metrics"}[5m])) > 0.01
+        for: 1m
+        labels:
+          severity: warning
+          service: msa-demo
+        annotations:
+          summary: "MSA service error rate is high"
+          description: "{{ $labels.service }} has more than 20% 5xx responses for non-metrics requests."
+
+      - alert: MsaHighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, service) (rate(demo_app_request_duration_seconds_bucket{endpoint!="metrics"}[5m]))
+          ) > 1
+        for: 2m
+        labels:
+          severity: warning
+          service: msa-demo
+        annotations:
+          summary: "MSA service p95 latency is high"
+          description: "{{ $labels.service }} p95 latency is above 1 second for non-metrics requests."
