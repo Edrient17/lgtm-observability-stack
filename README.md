@@ -59,6 +59,7 @@ docker compose ps
 | Monitoring | Tempo | 3200 | 트레이스 조회 |
 | Monitoring | OTel Collector | 4317, 4318 | 트레이스 수집 |
 | Monitoring | Prometheus | 9090 | 메트릭 scrape 및 remote write |
+| Monitoring | Alertmanager | 9093 | Prometheus alert 수신 및 Slack 알림 전송 |
 | Monitoring | MinIO | 9000, 9001 | 오브젝트 스토리지 |
 | App | api-service | 8080 | 데모 서비스 진입점 |
 | App | catalog-service | 8081 | 상품 카탈로그 |

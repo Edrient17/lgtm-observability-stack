@@ -1,3 +1,5 @@
+# Version Policy
+
 ## Strategy
 
 - floating tag보다 안정적인 patch release를 우선 사용
@@ -15,6 +17,7 @@
 | Mimir | `grafana/mimir` | `3.1.2` | Mimir 3 line의 안정적인 patch release |
 | Tempo | `grafana/tempo` | `2.10.7` | Tempo 3 major line은 피하면서 최근 OTLP/TraceQL 기능을 사용할 수 있는 버전 |
 | Prometheus | `prom/prometheus` | `v3.5.4` | 안정적인 Prometheus 3 release branch |
+| Alertmanager | `prom/alertmanager` | `v0.28.1` | Prometheus alert를 Slack으로 전달하기 위한 안정적인 Alertmanager release |
 | Node Exporter | `prom/node-exporter` | `v1.11.1` | 안정적인 node-exporter release |
 | OpenTelemetry Collector Contrib | `otel/opentelemetry-collector-contrib` | `0.155.0` | 안정적인 collector release tag |
 | MinIO | `quay.io/minio/minio` | `RELEASE.2025-09-07T16-13-09Z` | MinIO server release tag를 고정합니다. |

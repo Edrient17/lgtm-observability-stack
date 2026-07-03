@@ -124,6 +124,32 @@ services:
     depends_on:
       - mimir
       - node-exporter
+      - alertmanager
+
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_VERSION:-v0.28.1}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        if [ -z "$$SLACK_WEBHOOK_URL" ]; then
+          echo "SLACK_WEBHOOK_URL must be set in .env" >&2
+          exit 1
+        fi
+        printf '%s' "$$SLACK_WEBHOOK_URL" > /alertmanager/slack-webhook-url
+        exec /bin/alertmanager \
+          --config.file=/etc/alertmanager/alertmanager.yml \
+          --storage.path=/alertmanager \
+          --web.listen-address=:9093
+    environment:
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+    volumes:
+      - ./configs/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    networks:
+      - observability
 
   node-exporter:
     image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.11.1}
@@ -159,6 +185,7 @@ services:
       - mimir
       - tempo
       - prometheus
+      - alertmanager
 
 networks:
   observability:
@@ -166,6 +193,7 @@ networks:
 
 volumes:
   grafana-data:
+  alertmanager-data:
   loki-data:
   mimir-data:
   minio-data:

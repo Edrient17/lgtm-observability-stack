@@ -54,6 +54,16 @@ groups:
           summary: "Mimir scrape target is down"
           description: "Prometheus cannot scrape Mimir metrics."
 
+      - alert: AlertmanagerTargetDown
+        expr: up{job="alertmanager"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: alertmanager
+        annotations:
+          summary: "Alertmanager scrape target is down"
+          description: "Prometheus cannot scrape Alertmanager metrics or deliver alerts to Slack."
+
       - alert: ObservabilityPipelineTargetDown
         expr: up{job="tempo"} == 0 or up{job="loki"} == 0
         for: 2m

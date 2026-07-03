@@ -66,8 +66,11 @@ App VM에서 확인
 ## Alerts
 
 - [ ] Prometheus가 `configs/prometheus/rules/node-alerts.yml`을 로드한다.
+- [ ] Alertmanager가 실행 중이며 `.env`의 `SLACK_WEBHOOK_URL`을 사용한다.
 - [ ] Grafana에서 `Alerts Overview` 대시보드가 표시된다.
 - [ ] App VM 서비스 하나를 약 1분 동안 중지하면 `MsaServiceDown`이 firing 상태가 된다.
+- [ ] `MsaServiceDown` firing 알림이 Slack 채널에 전송된다.
 - [ ] `/error` 요청을 반복 생성하면 `MsaHighErrorRate`가 firing 상태가 된다.
 - [ ] App VM Node Exporter를 약 1분 동안 중지하면 `AppVmNodeExporterDown`이 firing 상태가 된다.
 - [ ] 중지한 컨테이너를 다시 시작한 뒤 alert가 해제되는 것을 확인한다.
+- [ ] resolved 알림이 Slack 채널에 전송된다.
