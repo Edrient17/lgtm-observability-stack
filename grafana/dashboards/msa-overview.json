@@ -50,7 +50,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
         "x": 0,
         "y": 0
@@ -101,7 +101,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 6
+        "y": 8
       },
       "id": 2,
       "targets": [
@@ -135,7 +135,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 6
+        "y": 0
       },
       "id": 3,
       "targets": [
@@ -168,8 +168,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 14
+        "x": 12,
+        "y": 16
       },
       "id": 4,
       "targets": [
@@ -203,7 +203,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 8
       },
       "id": 5,
       "targets": [
@@ -220,6 +220,40 @@
         }
       ],
       "title": "App Entry Latency p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 6,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "editorMode": "code",
+          "expr": "sum by (status) (rate(demo_app_requests_total{endpoint!=\"metrics\"}[5m]))",
+          "legendFormat": "{{status}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HTTP Status Rate",
       "type": "timeseries"
     }
   ],
