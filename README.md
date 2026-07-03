@@ -4,7 +4,7 @@ Two-VM LGTM observability stack for a small MSA-style demo workload.
 
 The project is fixed to a two-VM topology:
 
-![LGTM two-VM MSA architecture](docs/lgtm-architecture.svg)
+![LGTM two-VM MSA architecture](docs/lgtm-architecture.jpg)
 
 ```text
                          Browser / cron

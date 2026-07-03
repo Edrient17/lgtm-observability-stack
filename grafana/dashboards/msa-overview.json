@@ -111,13 +111,13 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (service, endpoint) (rate(demo_app_requests_total{endpoint!=\"metrics\"}[5m]))",
-          "legendFormat": "{{service}} {{endpoint}}",
+          "expr": "sum by (endpoint) (rate(demo_app_requests_total{service=\"api-service\",endpoint=~\"browse|add_to_cart|checkout|work|error\"}[5m]))",
+          "legendFormat": "{{endpoint}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "App Request Rate",
+      "title": "App Entry Request Rate",
       "type": "timeseries"
     },
     {
@@ -213,13 +213,13 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (le, service, endpoint) (rate(demo_app_request_duration_seconds_bucket{endpoint!=\"metrics\"}[5m])))",
-          "legendFormat": "{{service}} {{endpoint}}",
+          "expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(demo_app_request_duration_seconds_bucket{service=\"api-service\",endpoint=~\"browse|add_to_cart|checkout|work|error\"}[5m])))",
+          "legendFormat": "{{endpoint}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Latency p95",
+      "title": "App Entry Latency p95",
       "type": "timeseries"
     }
   ],

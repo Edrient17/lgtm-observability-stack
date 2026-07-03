@@ -27,7 +27,7 @@
             "type": "tempo",
             "uid": "tempo"
           },
-          "query": "{ resource.service.name = \"api-service\" }",
+          "query": "{ resource.service.name = \"api-service\" && name != \"GET /metrics\" }",
           "queryType": "traceql",
           "refId": "A",
           "tableType": "traces"
@@ -61,13 +61,13 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total[5m]))",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{span_name=~\"browse-flow|cart-add-flow|checkout-flow|list-catalog|get-catalog-item|check-inventory|reserve-inventory|get-cart-items|create-order|authorize-payment|synthetic-work|synthetic-error\"}[5m]))",
           "legendFormat": "{{span_name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Span Call Rate",
+      "title": "Business Span Call Rate",
       "type": "timeseries"
     },
     {
@@ -95,13 +95,13 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_name=~\"browse-flow|cart-add-flow|checkout-flow|list-catalog|get-catalog-item|check-inventory|reserve-inventory|get-cart-items|create-order|authorize-payment|synthetic-work|synthetic-error\"}[5m])))",
           "legendFormat": "p95 {{span_name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Span Latency p95",
+      "title": "Business Span Latency p95",
       "type": "timeseries"
     }
   ],
