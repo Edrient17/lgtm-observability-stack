@@ -1,17 +1,15 @@
 # LGTM Observability Stack
 
-Two-VM LGTM observability stack for a small MSA-style demo workload.
-
-The project is fixed to a two-VM topology:
+소규모 MSA 스타일 데모 워크로드를 관측하기 위한 2-VM 기반 LGTM observability stack
 
 ![LGTM two-VM MSA architecture](docs/lgtm-architecture.jpg)
 
 ## Data Flow
 
-- Logs: App VM Docker logs -> Promtail -> Loki -> Grafana
-- Metrics: Prometheus pulls App VM services and Node Exporter -> Mimir -> Grafana
-- Traces: MSA services -> OTel Collector over OTLP gRPC -> Tempo -> Grafana
-- Storage: Mimir and Tempo store blocks in MinIO
+- Logs: App VM Docker logs -> Promtail -> Loki -> Grafana 순서로 전달
+- Metrics: Prometheus가 App VM 서비스와 Node Exporter를 pull하고 Mimir에 저장한 뒤 Grafana에서 조회
+- Traces: MSA 서비스가 OTLP gRPC로 OTel Collector에 trace를 보내고, Collector가 Tempo로 전달
+- Storage: Mimir와 Tempo는 block 데이터를 MinIO에 저장
 
 ## Demo Request Flows
 
@@ -49,26 +47,26 @@ docker compose up -d --build
 docker compose ps
 ```
 
-See `docs/two-vm-deployment.md` for setup, security group rules, and validation steps.
+설치 절차, 보안그룹 규칙, 검증 단계는 `docs/two-vm-deployment.md`를 참고
 
 ## Key Services
 
 | VM | Service | Port | Purpose |
 | --- | --- | ---: | --- |
-| Monitoring | Grafana | 3000 | External UI |
-| Monitoring | Loki | 3100 | Log ingestion/query |
-| Monitoring | Mimir | 9009 | Metrics storage/query |
-| Monitoring | Tempo | 3200 | Trace query |
-| Monitoring | OTel Collector | 4317, 4318 | Trace ingestion |
-| Monitoring | Prometheus | 9090 | Scrape and remote write |
-| Monitoring | MinIO | 9000, 9001 | Object storage |
-| App | api-service | 8080 | Public demo entrypoint |
-| App | catalog-service | 8081 | Product catalog |
-| App | inventory-service | 8082 | Stock checks and reservation |
-| App | cart-service | 8083 | Cart workflow |
-| App | order-service | 8084 | Checkout orchestration |
-| App | payment-service | 8085 | Payment authorization |
-| App | Node Exporter | 9100 | App VM system metrics |
+| Monitoring | Grafana | 3000 | 외부 Web UI |
+| Monitoring | Loki | 3100 | 로그 수집 및 조회 |
+| Monitoring | Mimir | 9009 | 메트릭 저장 및 조회 |
+| Monitoring | Tempo | 3200 | 트레이스 조회 |
+| Monitoring | OTel Collector | 4317, 4318 | 트레이스 수집 |
+| Monitoring | Prometheus | 9090 | 메트릭 scrape 및 remote write |
+| Monitoring | MinIO | 9000, 9001 | 오브젝트 스토리지 |
+| App | api-service | 8080 | 데모 서비스 진입점 |
+| App | catalog-service | 8081 | 상품 카탈로그 |
+| App | inventory-service | 8082 | 재고 조회 및 예약 |
+| App | cart-service | 8083 | 장바구니 처리 |
+| App | order-service | 8084 | 주문 처리 |
+| App | payment-service | 8085 | 결제 승인 |
+| App | Node Exporter | 9100 | App VM 시스템 메트릭 |
 
 ## Security Group Inbound Allowed
 
@@ -76,27 +74,27 @@ Monitoring VM inbound:
 
 | Port | Source | Purpose |
 | ---: | --- | --- |
-| 22/tcp | Your IP | SSH access |
+| 22/tcp | Your IP | SSH 접속 |
 | 3000/tcp | Your IP | Grafana Web UI |
-| 3100/tcp | App VM private IP | Promtail -> Loki log push |
+| 3100/tcp | App VM private IP | Promtail -> Loki 로그 전송 |
 | 4317/tcp | App VM private IP | MSA services -> OTel Collector OTLP gRPC |
 
 App VM inbound:
 
 | Port | Source | Purpose |
 | ---: | --- | --- |
-| 22/tcp | Your IP | SSH access |
-| 8080/tcp | Monitoring VM private IP | API Service metrics scrape |
-| 8081/tcp | Monitoring VM private IP | Catalog Service metrics scrape |
-| 8082/tcp | Monitoring VM private IP | Inventory Service metrics scrape |
-| 8083/tcp | Monitoring VM private IP | Cart Service metrics scrape |
-| 8084/tcp | Monitoring VM private IP | Order Service metrics scrape |
-| 8085/tcp | Monitoring VM private IP | Payment Service metrics scrape |
-| 9100/tcp | Monitoring VM private IP | Node Exporter metrics scrape |
+| 22/tcp | Your IP | SSH 접속 |
+| 8080/tcp | Monitoring VM private IP | API Service 메트릭 scrape |
+| 8081/tcp | Monitoring VM private IP | Catalog Service 메트릭 scrape |
+| 8082/tcp | Monitoring VM private IP | Inventory Service 메트릭 scrape |
+| 8083/tcp | Monitoring VM private IP | Cart Service 메트릭 scrape |
+| 8084/tcp | Monitoring VM private IP | Order Service 메트릭 scrape |
+| 8085/tcp | Monitoring VM private IP | Payment Service 메트릭 scrape |
+| 9100/tcp | Monitoring VM private IP | Node Exporter 메트릭 scrape |
 
 ## Generate Traffic
 
-Short manual test on the App VM:
+(1) App VM에서 짧게 수동 테스트할 때 사용
 
 ```bash
 curl http://localhost:8080/browse
@@ -105,7 +103,7 @@ curl http://localhost:8080/checkout
 curl http://localhost:8080/error
 ```
 
-Multi-day observation on the App VM:
+(2) 여러 날 동안 관찰할 트래픽을 만들 때 사용
 
 ```bash
 chmod +x ./scripts/random-demo-traffic.sh
@@ -147,21 +145,21 @@ TraceQL:
 
 | Path | Description |
 | --- | --- |
-| `docker-compose.monitoring.yml` | Monitoring VM runtime definition |
-| `docker-compose.app.yml` | App VM runtime definition |
-| `.env.monitoring.example` | Monitoring VM environment template |
-| `.env.app.example` | App VM environment template |
-| `configs/prometheus/prometheus.two-vm.yml` | Prometheus scrape config for both VMs |
-| `configs/promtail/promtail-app-config.yaml` | App VM Promtail config |
-| `msa-demo` | Shared image used by all six MSA demo services |
-| `scripts/random-demo-traffic.sh` | Random traffic generator for long-running observation |
-| `scripts/fault-injection.sh` | Controlled failure and recovery helper for alert testing |
+| `docker-compose.monitoring.yml` | Monitoring VM 실행 정의 |
+| `docker-compose.app.yml` | App VM 실행 정의 |
+| `.env.monitoring.example` | Monitoring VM용 환경변수 템플릿 |
+| `.env.app.example` | App VM용 환경변수 템플릿 |
+| `configs/prometheus/prometheus.two-vm.yml` | 두 VM을 scrape하는 Prometheus 설정 |
+| `configs/promtail/promtail-app-config.yaml` | App VM Promtail 설정 |
+| `msa-demo` | 6개 MSA 데모 서비스가 공유하는 이미지 소스 |
+| `scripts/random-demo-traffic.sh` | 장기 관찰용 랜덤 트래픽 생성 스크립트 |
+| `scripts/fault-injection.sh` | alert 테스트용 장애 주입 및 복구 스크립트 |
 
 ## Documentation
 
-- `docs/architecture.md`
-- `docs/two-vm-deployment.md`
-- `docs/validation.md`
-- `docs/alert-scenarios.md`
-- `docs/troubleshooting.md`
-- `docs/version-policy.md`
+- `docs/architecture.md` # LGTM observability stack 아키텍처
+- `docs/two-vm-deployment.md` # 두 VM 배포 및 검증
+- `docs/validation.md` # Prometheus, Grafana, Loki, Tempo, Mimir 검증
+- `docs/alert-scenarios.md` # alert 시나리오 및 검증
+- `docs/troubleshooting.md` # 문제 해결
+- `docs/version-policy.md` # 버전 정책

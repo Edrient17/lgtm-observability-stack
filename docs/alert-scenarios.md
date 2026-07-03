@@ -1,26 +1,26 @@
 # Alert Rules and Failure Scenarios
 
-This project uses Prometheus alert rules under `configs/prometheus/rules`.
-Grafana can visualize alert state through the `Alerts Overview` dashboard by querying the Prometheus `ALERTS` metric.
+이 프로젝트는 `configs/prometheus/rules` 아래의 Prometheus alert rule을 사용한다.
+Grafana에서는 Prometheus의 `ALERTS` 메트릭을 조회해 `Alerts Overview` 대시보드에서 alert 상태를 확인할 수 있다.
 
 ## Alert Rules
 
 | Alert | Condition | Purpose |
 | --- | --- | --- |
-| `HighCpuUsage` | VM CPU usage above 80% for 5 minutes | VM resource saturation |
-| `HighDiskUsage` | VM disk usage above 85% for 5 minutes | Storage capacity risk |
-| `LokiTargetDown` | Loki scrape target down for 2 minutes | Log backend availability |
-| `TempoTargetDown` | Tempo scrape target down for 2 minutes | Trace backend availability |
-| `MimirTargetDown` | Mimir scrape target down for 2 minutes | Metric backend availability |
-| `ObservabilityPipelineTargetDown` | Loki or Tempo scrape target down for 2 minutes | LGTM pipeline health |
-| `MsaServiceDown` | Any `msa-demo` scrape target down for 1 minute | Demo service availability |
-| `AppVmNodeExporterDown` | App VM Node Exporter down for 1 minute | App VM system metrics availability |
-| `MsaHighErrorRate` | Non-metrics request 5xx ratio above 20% for 1 minute | Application error detection |
-| `MsaHighLatencyP95` | Non-metrics request p95 latency above 1 second for 2 minutes | Application latency detection |
+| `HighCpuUsage` | VM CPU 사용률이 5분 동안 80% 초과 | VM 리소스 포화 감지 |
+| `HighDiskUsage` | VM disk 사용률이 5분 동안 85% 초과 | 디스크 용량 위험 감지 |
+| `LokiTargetDown` | Loki scrape target이 2분 동안 down | 로그 backend 가용성 확인 |
+| `TempoTargetDown` | Tempo scrape target이 2분 동안 down | 트레이스 backend 가용성 확인 |
+| `MimirTargetDown` | Mimir scrape target이 2분 동안 down | 메트릭 backend 가용성 확인 |
+| `ObservabilityPipelineTargetDown` | Loki 또는 Tempo scrape target이 2분 동안 down | LGTM pipeline 상태 확인 |
+| `MsaServiceDown` | `msa-demo` scrape target 중 하나가 1분 동안 down | 데모 서비스 가용성 확인 |
+| `AppVmNodeExporterDown` | App VM Node Exporter가 1분 동안 down | App VM 시스템 메트릭 수집 상태 확인 |
+| `MsaHighErrorRate` | non-metrics 요청의 5xx 비율이 1분 동안 20% 초과 | 애플리케이션 오류율 증가 감지 |
+| `MsaHighLatencyP95` | non-metrics 요청의 p95 latency가 2분 동안 1초 초과 | 애플리케이션 지연 증가 감지 |
 
 ## Apply Rule Changes
 
-On the Monitoring VM:
+Monitoring VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
@@ -29,8 +29,8 @@ docker compose exec prometheus promtool check rules /etc/prometheus/rules/node-a
 docker compose restart prometheus
 ```
 
-Grafana dashboard provisioning usually refreshes within 30 seconds.
-If the `Alerts Overview` dashboard does not appear immediately:
+Grafana dashboard provisioning은 보통 30초 안에 갱신된다.
+`Alerts Overview` 대시보드가 바로 보이지 않으면 Grafana를 재시작한다.
 
 ```bash
 docker compose restart grafana
@@ -38,9 +38,9 @@ docker compose restart grafana
 
 ## Scenario 1: MSA Service Down
 
-Purpose: verify that Prometheus detects an unavailable App VM service.
+Purpose: Prometheus가 사용할 수 없는 App VM 서비스를 감지하는지 확인한다.
 
-On the App VM:
+App VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
@@ -49,8 +49,8 @@ cd /home/ubuntu/lgtm-observability-stack
 
 Expected result:
 
-- In Grafana `MSA Overview`, `payment-service` changes to `DOWN`.
-- In Grafana `Alerts Overview`, `MsaServiceDown` becomes pending and then firing after about 1 minute.
+- Grafana `MSA Overview`에서 `payment-service`가 `DOWN`으로 변경된다.
+- Grafana `Alerts Overview`에서 `MsaServiceDown`이 약 1분 후 pending 상태를 거쳐 firing 상태가 된다.
 
 Recovery:
 
@@ -60,14 +60,14 @@ Recovery:
 
 Expected recovery:
 
-- `payment-service` returns to `UP`.
-- `MsaServiceDown` clears after Prometheus scrapes the recovered target.
+- `payment-service`가 `UP`으로 돌아온다.
+- Prometheus가 복구된 target을 다시 scrape하면 `MsaServiceDown`이 해제된다.
 
 ## Scenario 2: High Application Error Rate
 
-Purpose: verify that repeated 5xx responses trigger an application error alert.
+Purpose: 반복적인 5xx 응답이 애플리케이션 오류율 alert를 발생시키는지 확인한다.
 
-On the App VM:
+App VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
@@ -76,14 +76,14 @@ cd /home/ubuntu/lgtm-observability-stack
 
 Expected result:
 
-- In Grafana `MSA Overview`, `Error Rate` increases for `api-service`.
-- In Grafana `Logs Overview`, `Recent Errors` shows `intentional demo error`.
-- In Grafana `Alerts Overview`, `MsaHighErrorRate` becomes pending and then firing after about 1 minute.
+- Grafana `MSA Overview`에서 `api-service`의 `Error Rate`가 증가한다.
+- Grafana `Logs Overview`의 `Recent Errors`에 `intentional demo error` 로그가 표시된다.
+- Grafana `Alerts Overview`에서 `MsaHighErrorRate`가 약 1분 후 pending 상태를 거쳐 firing 상태가 된다.
 
 Recovery:
 
-- Stop sending `/error` requests.
-- Generate normal requests if needed:
+- `/error` 요청 전송을 중단한다.
+- 필요하면 정상 요청을 다시 생성한다.
 
 ```bash
 ./scripts/random-demo-traffic.sh
@@ -91,14 +91,14 @@ Recovery:
 
 Expected recovery:
 
-- Error rate drops as the 5-minute window moves past the test traffic.
-- `MsaHighErrorRate` clears automatically.
+- 5분 집계 구간에서 테스트 트래픽이 밀려나면서 error rate가 감소한다.
+- `MsaHighErrorRate`는 자동으로 해제된다.
 
 ## Scenario 3: App VM Metrics Collection Down
 
-Purpose: verify that VM-level metric collection failure is detected.
+Purpose: VM 레벨 메트릭 수집 장애가 감지되는지 확인한다.
 
-On the App VM:
+App VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
@@ -107,8 +107,8 @@ cd /home/ubuntu/lgtm-observability-stack
 
 Expected result:
 
-- In Grafana `VM Metrics`, App VM resource charts stop receiving fresh samples.
-- In Grafana `Alerts Overview`, `AppVmNodeExporterDown` becomes pending and then firing after about 1 minute.
+- Grafana `VM Metrics`에서 App VM 리소스 chart의 신규 sample 수집이 중단된다.
+- Grafana `Alerts Overview`에서 `AppVmNodeExporterDown`이 약 1분 후 pending 상태를 거쳐 firing 상태가 된다.
 
 Recovery:
 
@@ -118,14 +118,14 @@ Recovery:
 
 Expected recovery:
 
-- App VM resource metrics resume.
-- `AppVmNodeExporterDown` clears after Prometheus scrapes the recovered target.
+- App VM 리소스 메트릭 수집이 재개된다.
+- Prometheus가 복구된 target을 다시 scrape하면 `AppVmNodeExporterDown`이 해제된다.
 
 ## Scenario 4: Observability Backend Down
 
-Purpose: verify that LGTM backend target failures are detected.
+Purpose: LGTM backend target 장애가 감지되는지 확인한다.
 
-On the Monitoring VM:
+Monitoring VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
@@ -134,8 +134,8 @@ cd /home/ubuntu/lgtm-observability-stack
 
 Expected result:
 
-- `LokiTargetDown` becomes pending and then firing after about 2 minutes.
-- Log ingestion and LogQL queries are unavailable while Loki is stopped.
+- `LokiTargetDown`이 약 2분 후 pending 상태를 거쳐 firing 상태가 된다.
+- Loki가 중지된 동안 로그 수집과 LogQL 조회가 불가능하다.
 
 Recovery:
 
@@ -145,15 +145,15 @@ Recovery:
 
 Expected recovery:
 
-- Loki returns to ready state.
-- `LokiTargetDown` clears after Prometheus scrapes the recovered target.
+- Loki가 ready 상태로 돌아온다.
+- Prometheus가 복구된 target을 다시 scrape하면 `LokiTargetDown`이 해제된다.
 
 ## Recovery Helper
 
-If a test leaves multiple containers stopped, use:
+테스트 후 여러 컨테이너가 중지된 상태로 남아 있으면 아래 명령을 사용한다.
 
 ```bash
 ./scripts/fault-injection.sh recover-all
 ```
 
-Run it on the VM where the failure was injected.
+장애를 주입했던 VM에서 실행한다.

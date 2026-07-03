@@ -2,72 +2,71 @@
 
 ## Monitoring VM
 
-- [ ] `.env` was created from `.env.monitoring.example`.
-- [ ] `APP_VM_PRIVATE_IP` points to the App VM private IP.
-- [ ] `docker compose up -d` completes.
-- [ ] `docker compose ps` shows Grafana, Loki, Mimir, Tempo, Prometheus, OTel Collector, MinIO, and Node Exporter running.
-- [ ] Grafana is reachable on `http://<monitoring-vm-public-ip>:3000`.
+- [ ] `.env`를 `.env.monitoring.example`에서 생성
+- [ ] `APP_VM_PRIVATE_IP`가 App VM private IP를 가리킨다.
+- [ ] `docker compose up -d`가 정상 완료된다.
+- [ ] `docker compose ps`에서 Grafana, Loki, Mimir, Tempo, Prometheus, OTel Collector, MinIO, Node Exporter가 실행 중이다.
+- [ ] Grafana가 `http://<monitoring-vm-public-ip>:3000`에서 접속된다.
 
 ## App VM
 
-- [ ] `.env` was created from `.env.app.example`.
-- [ ] `MONITORING_VM_PRIVATE_IP` points to the Monitoring VM private IP.
-- [ ] `docker compose up -d --build` completes.
-- [ ] `docker compose ps` shows `api-service`, `catalog-service`, `inventory-service`, `cart-service`, `order-service`, `payment-service`, `promtail`, and `node-exporter` running.
+- [ ] `.env`를 `.env.app.example`에서 생성한다.
+- [ ] `MONITORING_VM_PRIVATE_IP`가 Monitoring VM private IP를 가리킨다.
+- [ ] `docker compose up -d --build`가 정상 완료된다.
+- [ ] `docker compose ps`에서 `api-service`, `catalog-service`, `inventory-service`, `cart-service`, `order-service`, `payment-service`, `promtail`, `node-exporter`가 실행 중이다.
 
 ## Connectivity
 
-From the Monitoring VM:
+Monitoring VM에서 확인
 
-- [ ] `curl http://<app-vm-private-ip>:8080/metrics` succeeds.
-- [ ] `curl http://<app-vm-private-ip>:8081/metrics` succeeds.
-- [ ] `curl http://<app-vm-private-ip>:8082/metrics` succeeds.
-- [ ] `curl http://<app-vm-private-ip>:8083/metrics` succeeds.
-- [ ] `curl http://<app-vm-private-ip>:8084/metrics` succeeds.
-- [ ] `curl http://<app-vm-private-ip>:8085/metrics` succeeds.
-- [ ] `curl http://<app-vm-private-ip>:9100/metrics` succeeds.
+- [ ] `curl http://<app-vm-private-ip>:8080/metrics`가 성공
+- [ ] `curl http://<app-vm-private-ip>:8081/metrics`가 성공
+- [ ] `curl http://<app-vm-private-ip>:8082/metrics`가 성공
+- [ ] `curl http://<app-vm-private-ip>:8083/metrics`가 성공
+- [ ] `curl http://<app-vm-private-ip>:8084/metrics`가 성공
+- [ ] `curl http://<app-vm-private-ip>:8085/metrics`가 성공
+- [ ] `curl http://<app-vm-private-ip>:9100/metrics`가 성공
 
-From the App VM:
+App VM에서 확인
 
-- [ ] `curl http://<monitoring-vm-private-ip>:3100/ready` eventually returns `ready`.
-- [ ] `curl http://<monitoring-vm-private-ip>:4318/` returns an HTTP response such as `404 page not found`.
+- [ ] `curl http://<monitoring-vm-private-ip>:3100/ready`가 최종적으로 `ready`를 반환한다.
+- [ ] `curl http://<monitoring-vm-private-ip>:4318/`가 `404 page not found` 같은 HTTP 응답을 반환한다.
 
 ## Logs
 
-- [ ] Loki datasource is healthy in Grafana.
-- [ ] `{job="docker", host="app-vm"}` returns app container logs.
-- [ ] Logs include `service`, `trace_id`, and `span_id` fields.
-- [ ] Error logs from `payment-service` can be found after `/checkout` traffic.
+- [ ] Grafana에서 Loki datasource가 healthy 상태이다.
+- [ ] `{job="docker", host="app-vm"}` 쿼리로 App 컨테이너 로그가 조회된다.
+- [ ] 로그에 `service`, `trace_id`, `span_id` 필드가 포함된다.
+- [ ] `/checkout` 트래픽 이후 `payment-service` 오류 로그를 확인할 수 있다.
 
 ## Metrics
 
-- [ ] Mimir datasource is healthy in Grafana.
-- [ ] `up` shows both Monitoring VM and App VM targets.
-- [ ] `sum by (service) (rate(demo_app_requests_total[5m]))` returns traffic for all active MSA services.
-- [ ] VM Metrics dashboard shows CPU, memory, disk, and network panels.
+- [ ] Grafana에서 Mimir datasource가 healthy 상태이다.
+- [ ] `up` 쿼리에서 Monitoring VM과 App VM target이 표시된다.
+- [ ] `sum by (service) (rate(demo_app_requests_total[5m]))`에서 활성 MSA 서비스 트래픽이 표시된다.
+- [ ] VM Metrics dashboard에서 CPU, memory, disk, network panel이 표시된다.
 
 ## Traces
 
-- [ ] Tempo datasource is healthy in Grafana.
-- [ ] `curl http://localhost:8080/browse` on the App VM generates traces.
-- [ ] `curl http://localhost:8080/cart/add` on the App VM generates traces.
-- [ ] `curl http://localhost:8080/checkout` on the App VM generates traces.
-- [ ] `{ resource.service.name = "api-service" }` returns traces in Grafana Explore.
-- [ ] Browse traces show `api-service -> catalog-service -> inventory-service`.
-- [ ] Cart traces show `api-service -> cart-service -> catalog-service/inventory-service`.
-- [ ] Checkout traces show `api-service -> cart-service/order-service -> inventory-service/payment-service`.
+- [ ] Grafana에서 Tempo datasource가 healthy 상태이다.
+- [ ] App VM에서 `curl http://localhost:8080/browse` 요청 시 trace가 생성된다.
+- [ ] App VM에서 `curl http://localhost:8080/cart/add` 요청 시 trace가 생성된다.
+- [ ] App VM에서 `curl http://localhost:8080/checkout` 요청 시 trace가 생성된다.
+- [ ] Grafana Explore에서 `{ resource.service.name = "api-service" }`로 trace가 조회된다.
+- [ ] Browse trace에서 `api-service -> catalog-service -> inventory-service` 흐름이 보인다.
+- [ ] Checkout trace에서 `api-service -> cart-service/order-service -> inventory-service/payment-service` 흐름이 보인다.
 
 ## Long-Running Observation
 
-- [ ] `scripts/random-demo-traffic.sh` runs manually on the App VM.
-- [ ] Cron is registered for multi-day traffic generation.
-- [ ] `logs/random-demo-traffic.log` shows `/browse`, `/cart/add`, `/checkout`, `/work`, and `/error` requests.
+- [ ] App VM에서 `scripts/random-demo-traffic.sh`를 수동 실행할 수 있다.
+- [ ] 여러 날 관찰을 위한 cron이 등록되어 있다.
+- [ ] `logs/random-demo-traffic.log`에 `/browse`, `/cart/add`, `/checkout`, `/work`, `/error` 요청이 기록된다.
 
 ## Alerts
 
-- [ ] Prometheus loads `configs/prometheus/rules/node-alerts.yml`.
-- [ ] Grafana shows the `Alerts Overview` dashboard.
-- [ ] `MsaServiceDown` fires when one App VM service is stopped for about 1 minute.
-- [ ] `MsaHighErrorRate` fires when repeated `/error` requests are generated.
-- [ ] `AppVmNodeExporterDown` fires when App VM Node Exporter is stopped for about 1 minute.
-- [ ] Alert recovery is confirmed after each stopped container is started again.
+- [ ] Prometheus가 `configs/prometheus/rules/node-alerts.yml`을 로드한다.
+- [ ] Grafana에서 `Alerts Overview` 대시보드가 표시된다.
+- [ ] App VM 서비스 하나를 약 1분 동안 중지하면 `MsaServiceDown`이 firing 상태가 된다.
+- [ ] `/error` 요청을 반복 생성하면 `MsaHighErrorRate`가 firing 상태가 된다.
+- [ ] App VM Node Exporter를 약 1분 동안 중지하면 `AppVmNodeExporterDown`이 firing 상태가 된다.
+- [ ] 중지한 컨테이너를 다시 시작한 뒤 alert가 해제되는 것을 확인한다.

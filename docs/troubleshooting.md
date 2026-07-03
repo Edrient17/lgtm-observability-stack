@@ -1,70 +1,24 @@
 # Troubleshooting
 
-Use this file as a live build log. The final report should include real symptoms, root causes, fixes, and outcomes from the two-VM deployment.
+이 파일은 실제 구축 과정의 증상, 원인, 조치, 결과를 정리하는 기록용 문서
 
-## Case 1: Monitoring VM Node Exporter Port Conflict
-
-- Symptom:
-  - `docker compose up -d` fails with `Bind for 127.0.0.1:9100 failed: port is already allocated`.
-- Root cause:
-  - An older Docker container still had a `node-exporter` instance publishing `127.0.0.1:9100`.
-- Fix:
-  - Stop the older stack or remove the old container.
-  - Re-run the Monitoring VM stack.
-- Useful commands:
-  - `sudo ss -ltnp | grep ':9100'`
-  - `docker ps | grep node`
-  - `docker stop <old-node-exporter-container>`
-  - `docker rm <old-node-exporter-container>`
-
-## Case 2: Demo Service Exits With Missing `pkg_resources`
+## Case 1: Demo Service Exits With Missing `pkg_resources`
 
 - Symptom:
-  - App VM service exits immediately with `ModuleNotFoundError: No module named 'pkg_resources'`.
+  - App VM service가 시작 직후 `ModuleNotFoundError: No module named 'pkg_resources'` 오류로 종료된다.
 - Root cause:
-  - `python:3.12-slim` does not include `setuptools` by default, while OpenTelemetry instrumentation imports `pkg_resources`.
+  - `python:3.12-slim`에는 기본적으로 `setuptools`가 포함되지 않는데, OpenTelemetry instrumentation이 `pkg_resources`를 import 하기 때문에 발생한다.
 - Fix:
-  - Add `setuptools` to `msa-demo/requirements.txt`.
-  - Rebuild the App VM services with `docker compose up -d --build`.
+  - `msa-demo/requirements.txt`에 `setuptools`를 추가
+  - App VM service를 `docker compose up -d --build`로 다시 build하고 시작
 
-## Case 3: App VM `8080` Connection Refused From Monitoring VM
+## Case 2: Dashboard Has No Data
 
 - Symptom:
-  - `curl http://<app-vm-private-ip>:8080/metrics` returns `Connection refused`, while `9100/metrics` works.
+  - Grafana dashboard는 열리지만 panel에 `No data`가 표시됨.
 - Root cause:
-  - The app container was not running or exited after startup.
+  - App VM 트래픽이 생성되지 않았거나, Prometheus target이 down 상태이거나, Mimir remote write가 아직 준비되지 않았을 수 있음.
 - Fix:
-  - Check `docker compose ps -a`.
-  - Check `docker compose logs api-service`.
-  - Rebuild and restart the App VM stack.
-
-## Case 4: Loki `/ready` Temporarily Reports Ingester Not Ready
-
-- Symptom:
-  - `curl http://<monitoring-vm-private-ip>:3100/ready` returns `Ingester not ready: waiting for 15s after being ready`.
-- Root cause:
-  - Loki has started but is still passing its startup readiness delay.
-- Fix:
-  - Wait briefly and retry.
-  - If it persists, inspect `docker compose logs loki`.
-
-## Case 5: OTel Collector `4318/` Returns 404
-
-- Symptom:
-  - `curl http://<monitoring-vm-private-ip>:4318/` returns `404 page not found`.
-- Root cause:
-  - OTLP HTTP receiver is reachable, but `/` is not a data ingestion path.
-- Fix:
-  - Treat this as a connectivity success.
-  - Validate traces by generating `/checkout` traffic and checking Tempo.
-
-## Case 6: Dashboard Has No Data
-
-- Symptom:
-  - Grafana dashboard loads but panels show `No data`.
-- Root cause:
-  - App VM traffic has not been generated, Prometheus targets are down, or Mimir remote write is not ready.
-- Fix:
-  - Run `./scripts/random-demo-traffic.sh` on the App VM.
-  - Query `up` and `sum by (service) (rate(demo_app_requests_total[5m]))`.
-  - Check Prometheus targets from Grafana Explore or Prometheus UI.
+  - App VM에서 `./scripts/random-demo-traffic.sh`를 실행
+  - `up`과 `sum by (service) (rate(demo_app_requests_total[5m]))`를 조회
+  - Grafana Explore 또는 Prometheus UI에서 Prometheus target 상태를 확인
