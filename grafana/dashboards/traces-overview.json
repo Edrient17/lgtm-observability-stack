@@ -15,7 +15,7 @@
         "uid": "tempo"
       },
       "gridPos": {
-        "h": 10,
+        "h": 9,
         "w": 24,
         "x": 0,
         "y": 0
@@ -51,7 +51,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 9
       },
       "id": 2,
       "targets": [
@@ -61,13 +61,13 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{span_name=~\"browse-flow|cart-add-flow|checkout-flow|list-catalog|get-catalog-item|check-inventory|reserve-inventory|get-cart-items|create-order|authorize-payment|synthetic-work|synthetic-error\"}[5m]))",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{span_name=~\"browse-flow|cart-add-flow|checkout-flow|synthetic-work|synthetic-error\"}[5m]))",
           "legendFormat": "{{span_name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Business Span Call Rate",
+      "title": "Entry Flow Span Call Rate",
       "type": "timeseries"
     },
     {
@@ -85,7 +85,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 9
       },
       "id": 3,
       "targets": [
@@ -95,13 +95,81 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_name=~\"browse-flow|cart-add-flow|checkout-flow|list-catalog|get-catalog-item|check-inventory|reserve-inventory|get-cart-items|create-order|authorize-payment|synthetic-work|synthetic-error\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_name=~\"browse-flow|cart-add-flow|checkout-flow|synthetic-work|synthetic-error\"}[5m])))",
           "legendFormat": "p95 {{span_name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Business Span Latency p95",
+      "title": "Entry Flow Span Latency p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 4,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "editorMode": "code",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{span_name=~\"cart-add-item|list-catalog|get-catalog-item|check-inventory|reserve-inventory|get-cart-items|create-order|authorize-payment\"}[5m]))",
+          "legendFormat": "{{span_name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Downstream Span Call Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_name=~\"cart-add-item|list-catalog|get-catalog-item|check-inventory|reserve-inventory|get-cart-items|create-order|authorize-payment\"}[5m])))",
+          "legendFormat": "p95 {{span_name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Downstream Span Latency p95",
       "type": "timeseries"
     }
   ],
@@ -121,6 +189,6 @@
   "timezone": "browser",
   "title": "Traces Overview",
   "uid": "traces-overview",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
