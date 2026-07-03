@@ -111,6 +111,9 @@ mkdir -p ./logs
 ./scripts/random-demo-traffic.sh
 ```
 
+기본값은 정상 트래픽 위주로 생성하며, `/error` 요청은 포함하지 않는다.
+오류율 alert 테스트는 `./scripts/fault-injection.sh error-burst`로 별도 수행한다.
+
 Cron example:
 
 ```cron

@@ -60,7 +60,8 @@ App VM에서 확인
 
 - [ ] App VM에서 `scripts/random-demo-traffic.sh`를 수동 실행할 수 있다.
 - [ ] 여러 날 관찰을 위한 cron이 등록되어 있다.
-- [ ] `logs/random-demo-traffic.log`에 `/browse`, `/cart/add`, `/checkout`, `/work`, `/error` 요청이 기록된다.
+- [ ] `logs/random-demo-traffic.log`에 `/browse`, `/cart/add`, `/checkout`, `/work` 요청이 기록된다.
+- [ ] 오류율 테스트가 필요할 때 `./scripts/fault-injection.sh error-burst`로 `/error` 요청을 별도 생성할 수 있다.
 
 ## Alerts
 

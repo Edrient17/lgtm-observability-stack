@@ -4,7 +4,7 @@ set -euo pipefail
 target="${1:-${DEMO_APP_URL:-http://localhost:8080}}"
 max_requests="${MAX_REQUESTS_PER_RUN:-12}"
 idle_chance="${IDLE_CHANCE_PERCENT:-25}"
-error_chance="${ERROR_CHANCE_PERCENT:-10}"
+error_chance="${ERROR_CHANCE_PERCENT:-0}"
 burst_chance="${BURST_CHANCE_PERCENT:-12}"
 curl_timeout="${CURL_TIMEOUT_SECONDS:-5}"
 

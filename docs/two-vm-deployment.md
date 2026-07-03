@@ -154,6 +154,9 @@ chmod +x ./scripts/random-demo-traffic.sh
 crontab -e
 ```
 
+랜덤 트래픽 스크립트는 기본적으로 `/error` 요청을 보내지 않는다.
+오류율 alert 테스트는 `./scripts/fault-injection.sh error-burst`로 별도 수행한다.
+
 Example cron entry:
 
 ```cron
