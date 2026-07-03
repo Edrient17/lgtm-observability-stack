@@ -6,6 +6,8 @@ x-demo-service: &demo-service
   environment: &demo-env
     OTEL_EXPORTER_OTLP_ENDPOINT: http://${MONITORING_VM_PRIVATE_IP}:4317
     OTEL_EXPORTER_OTLP_INSECURE: "true"
+    INVENTORY_LOW_STOCK_CHANCE: ${INVENTORY_LOW_STOCK_CHANCE:-0.01}
+    PAYMENT_DECLINE_CHANCE: ${PAYMENT_DECLINE_CHANCE:-0.02}
     LOG_LEVEL: INFO
   networks:
     - app-observability

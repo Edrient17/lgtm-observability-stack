@@ -25,6 +25,8 @@ CART_SERVICE_URL = os.getenv("CART_SERVICE_URL", "http://cart-service:8083")
 ORDER_SERVICE_URL = os.getenv("ORDER_SERVICE_URL", "http://order-service:8084")
 PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://payment-service:8085")
 PORT = int(os.getenv("PORT", "8080"))
+INVENTORY_LOW_STOCK_CHANCE = float(os.getenv("INVENTORY_LOW_STOCK_CHANCE", "0.01"))
+PAYMENT_DECLINE_CHANCE = float(os.getenv("PAYMENT_DECLINE_CHANCE", "0.02"))
 
 PRODUCTS = [
     {"sku": "sku-1001", "name": "LGTM Hoodie", "price": 59.0},
@@ -305,7 +307,7 @@ def inventory_reserve():
         span.set_attribute("demo.sku", sku)
         span.set_attribute("demo.qty", qty)
 
-        if random.random() < 0.08:
+        if random.random() < INVENTORY_LOW_STOCK_CHANCE:
             logger.warning("inventory reservation low stock sku=%s qty=%s", sku, qty)
             return jsonify({"service": SERVICE_NAME, "sku": sku, "reserved": False, "reason": "low_stock"}), 409
 
@@ -379,7 +381,7 @@ def authorize_payment():
         span.set_attribute("demo.order_id", order_id)
         span.set_attribute("demo.amount", amount)
 
-        if random.random() < 0.12:
+        if random.random() < PAYMENT_DECLINE_CHANCE:
             logger.error("payment authorization failed order_id=%s amount=%.2f", order_id, amount)
             return jsonify({"service": SERVICE_NAME, "order_id": order_id, "status": "declined"}), 500
 
