@@ -1,0 +1,417 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api-service
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: api-service
+          image: msa-demo:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+              hostPort: 8080
+          envFrom:
+            - configMapRef:
+                name: msa-demo-config
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: api-service
+            - name: SERVICE_ROLE
+              value: api
+            - name: PORT
+              value: "8080"
+            - name: CATALOG_SERVICE_URL
+              value: http://catalog-service:8081
+            - name: INVENTORY_SERVICE_URL
+              value: http://inventory-service:8082
+            - name: CART_SERVICE_URL
+              value: http://cart-service:8083
+            - name: ORDER_SERVICE_URL
+              value: http://order-service:8084
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: api-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: catalog-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: catalog-service
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: catalog-service
+          image: msa-demo:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8081
+              hostPort: 8081
+          envFrom:
+            - configMapRef:
+                name: msa-demo-config
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: catalog-service
+            - name: SERVICE_ROLE
+              value: catalog
+            - name: PORT
+              value: "8081"
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: catalog-service
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: inventory-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: inventory-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: inventory-service
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: inventory-service
+          image: msa-demo:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8082
+              hostPort: 8082
+          envFrom:
+            - configMapRef:
+                name: msa-demo-config
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: inventory-service
+            - name: SERVICE_ROLE
+              value: inventory
+            - name: PORT
+              value: "8082"
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: inventory-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: inventory-service
+  ports:
+    - name: http
+      port: 8082
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: cart-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cart-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cart-service
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: cart-service
+          image: msa-demo:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8083
+              hostPort: 8083
+          envFrom:
+            - configMapRef:
+                name: msa-demo-config
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: cart-service
+            - name: SERVICE_ROLE
+              value: cart
+            - name: PORT
+              value: "8083"
+            - name: CATALOG_SERVICE_URL
+              value: http://catalog-service:8081
+            - name: INVENTORY_SERVICE_URL
+              value: http://inventory-service:8082
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: cart-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: cart-service
+  ports:
+    - name: http
+      port: 8083
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: order-service
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: order-service
+          image: msa-demo:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8084
+              hostPort: 8084
+          envFrom:
+            - configMapRef:
+                name: msa-demo-config
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: order-service
+            - name: SERVICE_ROLE
+              value: order
+            - name: PORT
+              value: "8084"
+            - name: INVENTORY_SERVICE_URL
+              value: http://inventory-service:8082
+            - name: PAYMENT_SERVICE_URL
+              value: http://payment-service:8085
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: order-service
+  ports:
+    - name: http
+      port: 8084
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: payment-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payment-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payment-service
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: payment-service
+          image: msa-demo:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8085
+              hostPort: 8085
+          envFrom:
+            - configMapRef:
+                name: msa-demo-config
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: payment-service
+            - name: SERVICE_ROLE
+              value: payment
+            - name: PORT
+              value: "8085"
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: payment-service
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: payment-service
+  ports:
+    - name: http
+      port: 8085
+      targetPort: http

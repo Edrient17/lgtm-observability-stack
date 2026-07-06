@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: msa-demo-config
+  namespace: msa-demo
+data:
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://10.0.0.10:4317"
+  OTEL_EXPORTER_OTLP_INSECURE: "true"
+  INVENTORY_LOW_STOCK_CHANCE: "0.01"
+  PAYMENT_DECLINE_CHANCE: "0.02"
+  LOG_LEVEL: "INFO"
+  APP_HOST_LABEL: "app-vm"
+  LOKI_PUSH_URL: "http://10.0.0.10:3100/loki/api/v1/push"

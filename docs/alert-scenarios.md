@@ -71,7 +71,7 @@ App VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
-./scripts/fault-injection.sh payment-down
+./scripts/k3s-fault-injection.sh payment-down
 ```
 
 Expected result:
@@ -83,7 +83,7 @@ Expected result:
 Recovery:
 
 ```bash
-./scripts/fault-injection.sh payment-up
+./scripts/k3s-fault-injection.sh payment-up
 ```
 
 Expected recovery:
@@ -100,7 +100,7 @@ App VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
-./scripts/fault-injection.sh error-burst
+./scripts/k3s-fault-injection.sh error-burst
 ```
 
 Expected result:
@@ -131,7 +131,7 @@ App VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
-./scripts/fault-injection.sh node-exporter-down
+./scripts/k3s-fault-injection.sh node-exporter-down
 ```
 
 Expected result:
@@ -142,7 +142,7 @@ Expected result:
 Recovery:
 
 ```bash
-./scripts/fault-injection.sh node-exporter-up
+./scripts/k3s-fault-injection.sh node-exporter-up
 ```
 
 Expected recovery:
@@ -158,7 +158,7 @@ Monitoring VM에서 실행한다.
 
 ```bash
 cd /home/ubuntu/lgtm-observability-stack
-./scripts/fault-injection.sh loki-down
+docker compose stop loki
 ```
 
 Expected result:
@@ -169,7 +169,7 @@ Expected result:
 Recovery:
 
 ```bash
-./scripts/fault-injection.sh loki-up
+docker compose start loki
 ```
 
 Expected recovery:
@@ -179,10 +179,10 @@ Expected recovery:
 
 ## Recovery Helper
 
-테스트 후 여러 컨테이너가 중지된 상태로 남아 있으면 아래 명령을 사용한다.
+테스트 후 App VM K3S 리소스가 중지된 상태로 남아 있으면 아래 명령을 사용한다.
 
 ```bash
-./scripts/fault-injection.sh recover-all
+./scripts/k3s-fault-injection.sh recover-all
 ```
 
-장애를 주입했던 VM에서 실행한다.
+App VM에서 실행한다.

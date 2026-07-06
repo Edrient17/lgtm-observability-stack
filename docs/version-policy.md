@@ -28,10 +28,10 @@
 
 component 계열은 한 번에 하나씩 upgrade 한다.
 
-1. `.env.monitoring.example`, `.env.app.example`, `docker-compose.monitoring.yml` 또는 `docker-compose.app.yml`의 fallback tag를 수정
-2. 작업 PC에서 `docker compose --env-file .env.monitoring.example config`를 실행
-3. 작업 PC에서 `docker compose --env-file .env.app.example config`를 실행
-4. 깨끗한 테스트 환경에서 영향받는 VM stack을 시작
+1. `.env.example`, `docker-compose.yml`, `k3s/app-vm` manifest의 image tag를 수정
+2. 작업 PC에서 `docker compose --env-file .env.example config`를 실행
+3. 작업 PC에서 `kubectl kustomize k3s/app-vm`을 실행
+4. 깨끗한 테스트 환경에서 Monitoring VM stack과 App VM K3S stack을 시작
 5. `bash scripts/healthcheck.sh`를 실행
 6. `bash scripts/random-demo-traffic.sh`로 MSA 트래픽을 생성
 7. Grafana datasource health, dashboard, logs, metrics, traces를 확인

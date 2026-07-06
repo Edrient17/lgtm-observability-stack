@@ -6,7 +6,7 @@
 
 ## Data Flow
 
-- Logs: App VM Docker logs -> Promtail -> Loki -> Grafana 순서로 전달
+- Logs: App VM K3S pod logs -> Promtail -> Loki -> Grafana 순서로 전달
 - Metrics: Prometheus가 App VM 서비스와 Node Exporter를 pull하고 Mimir에 저장한 뒤 Grafana에서 조회
 - Traces: MSA 서비스가 OTLP gRPC로 OTel Collector에 trace를 보내고, Collector가 Tempo로 전달
 - Storage: Mimir와 Tempo는 block 데이터를 MinIO에 저장
@@ -32,20 +32,24 @@
 Monitoring VM:
 
 ```bash
-cp .env.monitoring.example .env
+cp .env.example .env
 # edit APP_VM_PRIVATE_IP, GRAFANA_ADMIN_PASSWORD, MINIO_ROOT_PASSWORD
 docker compose up -d
 docker compose ps
 ```
 
+기존 `.env`를 재사용한다면 `COMPOSE_FILE=docker-compose.monitoring.yml` 줄은 삭제한다.
+
 App VM:
 
 ```bash
-cp .env.app.example .env
-# edit MONITORING_VM_PRIVATE_IP and APP_HOST_LABEL
-docker compose up -d --build
-docker compose ps
+# edit k3s/app-vm/configmap.yaml monitoring VM private IP
+./scripts/k3s-load-demo-image.sh
+kubectl apply -k ./k3s/app-vm
+kubectl -n msa-demo get pods,svc,daemonset
 ```
+
+자세한 절차는 `docs/app-vm-k3s.md`를 참고
 
 설치 절차, 보안그룹 규칙, 검증 단계는 `docs/two-vm-deployment.md`를 참고
 
@@ -113,7 +117,7 @@ mkdir -p ./logs
 ```
 
 기본값은 정상 트래픽 위주로 생성하며, `/error` 요청은 포함하지 않는다.
-오류율 alert 테스트는 `./scripts/fault-injection.sh error-burst`로 별도 수행한다.
+오류율 alert 테스트는 `./scripts/k3s-fault-injection.sh error-burst`로 별도 수행한다.
 
 Cron example:
 
@@ -134,8 +138,8 @@ histogram_quantile(0.95, sum by (le, service) (rate(demo_app_request_duration_se
 LogQL:
 
 ```logql
-{job="docker", host="app-vm"}
-{job="docker", host="app-vm"} |= "payment authorization failed"
+{job="k3s-pods", host="app-vm"}
+{job="k3s-pods", host="app-vm"} |= "payment authorization failed"
 ```
 
 TraceQL:
@@ -149,20 +153,19 @@ TraceQL:
 
 | Path | Description |
 | --- | --- |
-| `docker-compose.monitoring.yml` | Monitoring VM 실행 정의 |
-| `docker-compose.app.yml` | App VM 실행 정의 |
-| `.env.monitoring.example` | Monitoring VM용 환경변수 템플릿 |
-| `.env.app.example` | App VM용 환경변수 템플릿 |
+| `docker-compose.yml` | Monitoring VM 실행 정의 |
+| `.env.example` | Monitoring VM용 환경변수 템플릿 |
+| `k3s/app-vm` | App VM demo MSA K3S manifest |
 | `configs/prometheus/prometheus.two-vm.yml` | 두 VM을 scrape하는 Prometheus 설정 |
-| `configs/promtail/promtail-app-config.yaml` | App VM Promtail 설정 |
 | `msa-demo` | 6개 MSA 데모 서비스가 공유하는 이미지 소스 |
 | `scripts/random-demo-traffic.sh` | 장기 관찰용 랜덤 트래픽 생성 스크립트 |
-| `scripts/fault-injection.sh` | alert 테스트용 장애 주입 및 복구 스크립트 |
+| `scripts/k3s-fault-injection.sh` | K3S 배포용 장애 주입 및 복구 스크립트 |
 
 ## Documentation
 
 - `docs/architecture.md` # LGTM observability stack 아키텍처
 - `docs/two-vm-deployment.md` # 두 VM 배포 및 검증
+- `docs/app-vm-k3s.md` # App VM K3S 선택 배포
 - `docs/validation.md` # Prometheus, Grafana, Loki, Tempo, Mimir 검증
 - `docs/alert-scenarios.md` # alert 시나리오 및 검증
 - `docs/troubleshooting.md` # 문제 해결

@@ -1,6 +1,4 @@
 .env
-.env.app
-.env.monitoring
 data/
 logs/
 *.log

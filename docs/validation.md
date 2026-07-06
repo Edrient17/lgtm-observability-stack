@@ -2,7 +2,7 @@
 
 ## Monitoring VM
 
-- [ ] `.env`를 `.env.monitoring.example`에서 생성
+- [ ] `.env`를 `.env.example`에서 생성
 - [ ] `APP_VM_PRIVATE_IP`가 App VM private IP를 가리킨다.
 - [ ] `docker compose up -d`가 정상 완료된다.
 - [ ] `docker compose ps`에서 Grafana, Loki, Mimir, Tempo, Prometheus, OTel Collector, MinIO, Node Exporter가 실행 중이다.
@@ -10,10 +10,11 @@
 
 ## App VM
 
-- [ ] `.env`를 `.env.app.example`에서 생성한다.
-- [ ] `MONITORING_VM_PRIVATE_IP`가 Monitoring VM private IP를 가리킨다.
-- [ ] `docker compose up -d --build`가 정상 완료된다.
-- [ ] `docker compose ps`에서 `api-service`, `catalog-service`, `inventory-service`, `cart-service`, `order-service`, `payment-service`, `promtail`, `node-exporter`가 실행 중이다.
+- [ ] App VM에 K3S가 설치되어 있고 `kubectl get nodes`가 정상이다.
+- [ ] `k3s/app-vm/configmap.yaml`의 Monitoring VM private IP가 올바르다.
+- [ ] `./scripts/k3s-load-demo-image.sh`로 `msa-demo:local` 이미지를 k3s containerd에 import했다.
+- [ ] `kubectl apply -k ./k3s/app-vm`가 정상 완료된다.
+- [ ] `kubectl -n msa-demo get pods,svc,daemonset`에서 demo MSA, Promtail, Node Exporter가 실행 중이다.
 
 ## Connectivity
 
@@ -35,7 +36,7 @@ App VM에서 확인
 ## Logs
 
 - [ ] Grafana에서 Loki datasource가 healthy 상태이다.
-- [ ] `{job="docker", host="app-vm"}` 쿼리로 App 컨테이너 로그가 조회된다.
+- [ ] `{job="k3s-pods", host="app-vm"}` 쿼리로 App 로그가 조회된다.
 - [ ] 로그에 `service`, `trace_id`, `span_id` 필드가 포함된다.
 - [ ] `/checkout` 트래픽 이후 `payment-service` 오류 로그를 확인할 수 있다.
 
@@ -61,7 +62,7 @@ App VM에서 확인
 - [ ] App VM에서 `scripts/random-demo-traffic.sh`를 수동 실행할 수 있다.
 - [ ] 여러 날 관찰을 위한 cron이 등록되어 있다.
 - [ ] `logs/random-demo-traffic.log`에 `/browse`, `/cart/add`, `/checkout`, `/work` 요청이 기록된다.
-- [ ] 오류율 테스트가 필요할 때 `./scripts/fault-injection.sh error-burst`로 `/error` 요청을 별도 생성할 수 있다.
+- [ ] 오류율 테스트가 필요할 때 `./scripts/k3s-fault-injection.sh error-burst`로 `/error` 요청을 별도 생성할 수 있다.
 
 ## Alerts
 

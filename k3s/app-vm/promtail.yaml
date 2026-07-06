@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: msa-demo
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+
+    positions:
+      filename: /tmp/positions.yaml
+
+    clients:
+      - url: ${LOKI_PUSH_URL}
+
+    scrape_configs:
+      - job_name: k3s-pods
+        pipeline_stages:
+          - cri: {}
+          - json:
+              expressions:
+                service: service
+                trace_id: trace_id
+                span_id: span_id
+                level: level
+                logger: logger
+          - labels:
+              service:
+              level:
+              logger:
+          - structured_metadata:
+              trace_id:
+              span_id:
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: k3s-pods
+              host: ${APP_HOST_LABEL}
+              vm_role: app
+              __path__: /var/log/containers/*_msa-demo_*.log
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: promtail
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: promtail
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: promtail
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: promtail
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: promtail
+          image: grafana/promtail:3.6.11
+          args:
+            - -config.file=/etc/promtail/promtail.yaml
+            - -config.expand-env=true
+          env:
+            - name: LOKI_PUSH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-demo-config
+                  key: LOKI_PUSH_URL
+            - name: APP_HOST_LABEL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-demo-config
+                  key: APP_HOST_LABEL
+          volumeMounts:
+            - name: config
+              mountPath: /etc/promtail
+              readOnly: true
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: positions
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: promtail-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: positions
+          emptyDir: {}

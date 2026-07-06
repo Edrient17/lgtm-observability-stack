@@ -20,6 +20,7 @@ Monitoring VM
   - Node Exporter for Monitoring VM metrics
 
 App VM
+  - K3S single-node cluster
   - API Service
   - Catalog Service
   - Inventory Service
@@ -29,6 +30,9 @@ App VM
   - Node Exporter for App VM metrics
   - Promtail (App VM logs)
 ```
+
+App VM의 demo MSA는 K3S로 실행한다.
+K3S 배포 절차는 `docs/app-vm-k3s.md`를 참고한다.
 
 ## Network Flow
 
@@ -56,25 +60,22 @@ User -> Monitoring VM
 
 | File | VM | Purpose |
 | --- | --- | --- |
-| `.env.monitoring.example` | Monitoring VM | backend stack용 `.env` 템플릿 |
-| `docker-compose.monitoring.yml` | Monitoring VM | Grafana, Loki, Mimir, Tempo, Prometheus, MinIO 구성 |
+| `.env.example` | Monitoring VM | backend stack용 `.env` 템플릿 |
+| `docker-compose.yml` | Monitoring VM | Grafana, Loki, Mimir, Tempo, Prometheus, MinIO 구성 |
 | `configs/prometheus/prometheus.two-vm.yml` | Monitoring VM | Monitoring VM과 App VM target scrape 설정 |
-| `.env.app.example` | App VM | monitored app stack용 `.env` 템플릿 |
-| `docker-compose.app.yml` | App VM | API, Catalog, Inventory, Cart, Order, Payment, Node Exporter, Promtail 구성 |
-| `configs/promtail/promtail-app-config.yaml` | App VM | App VM 로그를 Monitoring VM Loki로 전송하는 Promtail 설정 |
+| `k3s/app-vm` | App VM | demo MSA, Promtail, Node Exporter K3S manifest |
 
 ## Monitoring VM Setup
 
 Repository를 Monitoring VM에 복사한 뒤 환경 파일을 생성한다.
 
 ```bash
-cp .env.monitoring.example .env
+cp .env.example .env
 ```
 
 `.env`를 수정합니다.
 
 ```bash
-COMPOSE_FILE=docker-compose.monitoring.yml
 APP_VM_PRIVATE_IP=<app-vm-private-ip>
 GRAFANA_ADMIN_PASSWORD=<strong-password>
 MINIO_ROOT_PASSWORD=<strong-password>
@@ -95,26 +96,15 @@ http://<monitoring-vm-public-ip>:3000
 
 ## App VM Setup
 
-Repository를 App VM에 복사한 뒤 환경 파일을 생성한다.
+Repository를 App VM에 복사한 뒤 `k3s/app-vm/configmap.yaml`에서 Monitoring VM private IP를 수정한다.
 
-```bash
-cp .env.app.example .env
+```yaml
+OTEL_EXPORTER_OTLP_ENDPOINT: "http://<monitoring-vm-private-ip>:4317"
+LOKI_PUSH_URL: "http://<monitoring-vm-private-ip>:3100/loki/api/v1/push"
 ```
 
-`.env`를 수정한다.
-
-```bash
-COMPOSE_FILE=docker-compose.app.yml
-MONITORING_VM_PRIVATE_IP=<monitoring-vm-private-ip>
-APP_HOST_LABEL=app-vm
-```
-
-App VM stack을 기동한다.
-
-```bash
-docker compose up -d --build
-docker compose ps
-```
+K3S 배포 절차는 `docs/app-vm-k3s.md`를 따른다.
+Monitoring VM 구성과 Prometheus scrape port는 동일하게 유지한다.
 
 ## Validation
 
@@ -155,7 +145,7 @@ crontab -e
 ```
 
 랜덤 트래픽 스크립트는 기본적으로 `/error` 요청을 보내지 않는다.
-오류율 alert 테스트는 `./scripts/fault-injection.sh error-burst`로 별도 수행한다.
+오류율 alert 테스트는 `./scripts/k3s-fault-injection.sh error-burst`로 별도 수행한다.
 
 Example cron entry:
 
@@ -174,7 +164,7 @@ mkdir -p /home/ubuntu/lgtm-observability-stack/logs
 - Metrics: `up`, `rate(demo_app_requests_total[5m])`
 - MSA metrics: `sum by (service) (rate(demo_app_requests_total[5m]))`
 - VM metrics: VM Metrics dashboard의 CPU, disk, filesystem, network panel
-- Logs: `{job="docker", host="app-vm"}`
+- Logs: `{job="k3s-pods", host="app-vm"}`
 - Traces: `{ resource.service.name = "api-service" }`
 - MSA traces: `{ resource.service.name = "api-service" || resource.service.name = "cart-service" || resource.service.name = "order-service" }`
 

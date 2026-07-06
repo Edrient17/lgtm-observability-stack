@@ -10,7 +10,8 @@
   - `python:3.12-slim`에는 기본적으로 `setuptools`가 포함되지 않는데, OpenTelemetry instrumentation이 `pkg_resources`를 import 하기 때문에 발생한다.
 - Fix:
   - `msa-demo/requirements.txt`에 `setuptools`를 추가
-  - App VM service를 `docker compose up -d --build`로 다시 build하고 시작
+  - `./scripts/k3s-load-demo-image.sh`로 이미지를 다시 빌드하고 k3s containerd에 import
+  - `kubectl -n msa-demo rollout restart deployment`로 demo MSA pod를 재시작
 
 ## Case 2: Dashboard Has No Data
 
