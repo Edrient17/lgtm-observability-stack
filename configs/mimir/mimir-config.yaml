@@ -66,9 +66,8 @@ alertmanager_storage:
     bucket_name: mimir-alertmanager
 
 limits:
-  compactor_blocks_retention_period: 168h
+  compactor_blocks_retention_period: ${MIMIR_METRICS_RETENTION}
 
 memberlist:
   join_members:
     - mimir
-

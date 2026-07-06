@@ -27,6 +27,26 @@ schema_config:
 limits_config:
   allow_structured_metadata: true
   retention_period: 168h
+  retention_stream:
+    # Keep noisy host/system logs shorter than application logs.
+    - selector: '{job="varlogs"}'
+      priority: 1
+      period: 72h
+    # Keep debug container logs short if LOG_LEVEL is lowered during tests.
+    - selector: '{job="docker", level="DEBUG"}'
+      priority: 2
+      period: 72h
+    # Default application logs stay aligned with the global 7-day policy.
+    - selector: '{job="docker", level="INFO"}'
+      priority: 3
+      period: 168h
+    # Keep warning/error logs and key entrypoint/business-flow services longer.
+    - selector: '{job="docker", level=~"WARNING|ERROR|CRITICAL"}'
+      priority: 4
+      period: 336h
+    - selector: '{job="docker", service=~"api-service|order-service|payment-service"}'
+      priority: 5
+      period: 336h
   volume_enabled: true
 
 compactor:
@@ -36,4 +56,3 @@ compactor:
 
 analytics:
   reporting_enabled: false
-

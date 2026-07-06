@@ -16,7 +16,7 @@ ingester:
 
 compactor:
   compaction:
-    block_retention: 168h
+    block_retention: ${TEMPO_TRACE_RETENTION}
 
 storage:
   trace:
@@ -49,4 +49,3 @@ overrides:
 
 usage_report:
   reporting_enabled: false
-

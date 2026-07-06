@@ -24,14 +24,18 @@ scrape_configs:
       - docker: {}
       - json:
           expressions:
+            service: service
             trace_id: trace_id
             span_id: span_id
             level: level
             logger: logger
       - labels:
+          service:
           level:
           logger:
+      - structured_metadata:
           trace_id:
+          span_id:
     static_configs:
       - targets:
           - localhost

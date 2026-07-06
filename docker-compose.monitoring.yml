@@ -59,6 +59,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lgtm}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-lgtm-secret-key}
+      MIMIR_METRICS_RETENTION: ${MIMIR_METRICS_RETENTION:-168h}
     volumes:
       - ./configs/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - mimir-data:/data/mimir
@@ -78,6 +79,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lgtm}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-lgtm-secret-key}
+      TEMPO_TRACE_RETENTION: ${TEMPO_TRACE_RETENTION:-168h}
     volumes:
       - ./configs/tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
       - tempo-data:/var/tempo
@@ -110,6 +112,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_LOCAL_RETENTION:-168h}
       - --web.enable-lifecycle
     volumes:
       - ./configs/prometheus/prometheus.two-vm.yml:/etc/prometheus/prometheus.yml:ro
