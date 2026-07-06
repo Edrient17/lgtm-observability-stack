@@ -43,6 +43,7 @@ docker compose ps
 App VM:
 
 ```bash
+cp k3s/app-vm/configmap.example.yaml k3s/app-vm/configmap.yaml
 # edit k3s/app-vm/configmap.yaml monitoring VM private IP
 ./scripts/k3s-load-demo-image.sh
 kubectl apply -k ./k3s/app-vm

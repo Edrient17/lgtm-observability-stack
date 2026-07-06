@@ -96,7 +96,11 @@ http://<monitoring-vm-public-ip>:3000
 
 ## App VM Setup
 
-Repository를 App VM에 복사한 뒤 `k3s/app-vm/configmap.yaml`에서 Monitoring VM private IP를 수정한다.
+Repository를 App VM에 복사한 뒤 `configmap.example.yaml`을 로컬 전용 `configmap.yaml`로 복사하고 Monitoring VM private IP를 수정한다.
+
+```bash
+cp k3s/app-vm/configmap.example.yaml k3s/app-vm/configmap.yaml
+```
 
 ```yaml
 OTEL_EXPORTER_OTLP_ENDPOINT: "http://<monitoring-vm-private-ip>:4317"

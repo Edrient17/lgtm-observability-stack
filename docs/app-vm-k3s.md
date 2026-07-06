@@ -33,7 +33,7 @@ node-exporter     app-vm:9100
 | Path | Purpose |
 | --- | --- |
 | `k3s/app-vm/namespace.yaml` | `msa-demo` namespace 생성 |
-| `k3s/app-vm/configmap.yaml` | Monitoring VM 주소와 demo app 공통 환경변수 |
+| `k3s/app-vm/configmap.example.yaml` | Monitoring VM 주소와 demo app 공통 환경변수 예시 |
 | `k3s/app-vm/msa-services.yaml` | 6개 demo MSA Deployment/Service |
 | `k3s/app-vm/promtail.yaml` | K3S pod log를 Loki로 전송 |
 | `k3s/app-vm/node-exporter.yaml` | App VM system metric 노출 |
@@ -50,7 +50,11 @@ sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 kubectl get nodes
 ```
 
-`k3s/app-vm/configmap.yaml`에서 Monitoring VM private IP를 수정한다.
+`configmap.example.yaml`을 로컬 전용 `configmap.yaml`로 복사한 뒤 Monitoring VM private IP를 수정한다.
+
+```bash
+cp k3s/app-vm/configmap.example.yaml k3s/app-vm/configmap.yaml
+```
 
 ```yaml
 OTEL_EXPORTER_OTLP_ENDPOINT: "http://<monitoring-vm-private-ip>:4317"
