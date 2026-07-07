@@ -16,6 +16,17 @@ alerting:
 
 remote_write:
   - url: http://mimir:9009/api/v1/push
+    write_relabel_configs:
+      - source_labels:
+          - job
+        regex: msa-demo
+        action: drop
+      - source_labels:
+          - job
+          - instance
+        separator: ;
+        regex: node-exporter;app-vm
+        action: drop
 
 scrape_configs:
   - job_name: prometheus
@@ -86,3 +97,8 @@ scrape_configs:
           - mimir:9009
         labels:
           vm_role: monitoring
+    metric_relabel_configs:
+      - source_labels:
+          - replica
+        regex: prometheus-1
+        action: drop
