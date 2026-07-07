@@ -56,3 +56,62 @@
     kubectl -n msa-demo rollout restart daemonset/alloy
     ```
   - Grafana `MSA Overview`를 새로고침하고 `Service Up`이 `UP`으로 돌아오는지 확인한다.
+
+## Case 4: MSA Dashboard Shows Duplicated App Metrics
+
+- Symptom:
+  - Grafana `MSA Overview`에서 `Service Up` 행이 비정상적으로 많이 표시된다.
+  - `Scrape Request Rate` 또는 App request graph가 동일한 series가 여러 번 겹쳐 보인다.
+  - PromQL 결과에 `replica="prometheus-1"`가 붙은 App metric series가 함께 보인다.
+- Root cause:
+  - App VM metric은 Alloy가 Mimir로 `remote_write` 한다.
+  - App/MSA alert 평가를 위해 Prometheus가 Mimir의 `/prometheus/federate`에서 App metric을 가져온다.
+  - 이때 Prometheus가 federation으로 가져온 App metric까지 다시 Mimir로 `remote_write`하면 Mimir 안에 동일 App metric이 중복 저장된다.
+- Check:
+  - Grafana Explore에서 Mimir datasource로 다음을 조회한다.
+
+    ```promql
+    up{job="msa-demo"}
+    ```
+
+  - 결과에 원본 series와 함께 `replica="prometheus-1"`가 붙은 series가 보이면 Prometheus가 federated App metric을 재적재한 상태다.
+  - Prometheus 설정에서 `app-metrics-from-mimir` scrape job과 `remote_write.write_relabel_configs`를 확인한다.
+
+    ```bash
+    docker compose exec prometheus promtool check config /etc/prometheus/prometheus.yml
+    ```
+- Fix:
+  - Prometheus `remote_write`에 App metric 재적재 방지 rule을 둔다.
+
+    ```yaml
+    remote_write:
+      - url: http://mimir:9009/api/v1/push
+        write_relabel_configs:
+          - source_labels:
+              - job
+            regex: msa-demo
+            action: drop
+          - source_labels:
+              - job
+              - instance
+            separator: ;
+            regex: node-exporter;app-vm
+            action: drop
+    ```
+
+  - Mimir federation으로 가져온 재적재본은 Prometheus 내부 alert 평가에만 사용하고, 다시 Mimir로 쓰지 않는다.
+  - 대시보드 쿼리에는 필요 시 `replica!="prometheus-1"` 조건을 추가해 기존 중복 sample의 영향을 줄인다.
+
+    ```promql
+    up{job="msa-demo", replica!="prometheus-1"}
+    ```
+
+  - Monitoring VM에서 Prometheus와 Grafana를 재적용한다.
+
+    ```bash
+    docker compose up -d prometheus grafana
+    docker compose restart prometheus grafana
+    ```
+- Note:
+  - 이미 Mimir에 저장된 중복 series는 retention 기간 동안 남을 수 있다.
+  - 수정 직후에는 Grafana 시간 범위를 `Last 5 minutes`로 줄여 새로 들어오는 sample 기준으로 정상화 여부를 확인한다.
