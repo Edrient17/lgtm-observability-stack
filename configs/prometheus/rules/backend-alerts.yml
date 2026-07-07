@@ -1,0 +1,62 @@
+groups:
+  - name: monitoring-backend-alerts
+    rules:
+      - alert: LokiTargetDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: loki
+        annotations:
+          summary: "Loki target is down"
+          description: "Prometheus cannot scrape Loki metrics for more than 2 minutes."
+
+      - alert: MimirTargetDown
+        expr: up{job="mimir"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mimir
+        annotations:
+          summary: "Mimir target is down"
+          description: "Prometheus cannot scrape Mimir metrics for more than 2 minutes."
+
+      - alert: TempoTargetDown
+        expr: up{job="tempo"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: tempo
+        annotations:
+          summary: "Tempo target is down"
+          description: "Prometheus cannot scrape Tempo metrics for more than 2 minutes."
+
+      - alert: GrafanaTargetDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: grafana
+        annotations:
+          summary: "Grafana target is down"
+          description: "Prometheus cannot scrape Grafana metrics for more than 2 minutes."
+
+      - alert: MonitoringNodeExporterDown
+        expr: up{job="node-exporter", instance="monitoring-vm"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: node-exporter
+        annotations:
+          summary: "Monitoring VM Node Exporter is down"
+          description: "Prometheus cannot scrape Monitoring VM Node Exporter metrics for more than 2 minutes."
+
+      - alert: AlertmanagerTargetDown
+        expr: up{job="alertmanager"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: alertmanager
+        annotations:
+          summary: "Alertmanager target is down"
+          description: "Prometheus cannot scrape Alertmanager metrics for more than 2 minutes."

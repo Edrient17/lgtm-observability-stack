@@ -24,7 +24,7 @@ App VM
   cart-service
   order-service
   payment-service
-  Promtail
+  Alloy
   Node Exporter
 ```
 
@@ -56,34 +56,35 @@ App VM
 
 1. App 서비스는 JSON 로그를 stdout으로 출력한다.
 2. Docker는 컨테이너 로그를 App VM에 저장한다.
-3. Promtail은 Docker JSON 로그와 `/var/log/*.log`를 tail 한다.
-4. Promtail은 로그 stream을 Monitoring VM의 Loki로 push 한다.
+3. Alloy는 K3S pod 로그 파일을 tail 하고 JSON 필드를 추출한다.
+4. Alloy는 로그 stream을 Monitoring VM의 Loki로 push 한다.
 5. Grafana는 LogQL로 Loki를 조회한다.
 6. JSON 로그에는 `trace_id`, `span_id`가 포함되어 Tempo trace와 연계할 수 있다.
 
 ## Metrics
 
-1. Prometheus는 Monitoring VM에서 실행된다.
-2. Prometheus는 다음 대상을 scrape 한다.
-   - Monitoring VM Node Exporter
-   - App VM Node Exporter
-   - `api-service:8080/metrics`
-   - `catalog-service:8081/metrics`
-   - `inventory-service:8082/metrics`
-   - `cart-service:8083/metrics`
-   - `order-service:8084/metrics`
-   - `payment-service:8085/metrics`
-   - Grafana, Loki, Mimir, Tempo, Prometheus 자체 메트릭
-3. Prometheus는 `remote_write`로 샘플을 Mimir에 기록한다.
-4. Grafana는 PromQL로 Mimir를 조회한다.
+1. App VM의 Alloy는 K3S 내부 Service DNS를 통해 demo MSA `/metrics`와 App VM Node Exporter를 scrape 한다.
+2. Alloy는 App VM metric sample을 Monitoring VM의 Mimir로 `remote_write` 한다.
+3. Monitoring VM의 Prometheus는 Grafana, Loki, Mimir, Tempo, Prometheus, Monitoring VM Node Exporter 같은 backend metric만 scrape 한다.
+4. Prometheus도 backend metric sample을 Mimir로 `remote_write` 한다.
+5. Prometheus는 App VM alert 평가를 위해 Mimir의 federation endpoint에서 App metric subset을 가져온다.
+6. Grafana는 PromQL로 Mimir를 조회한다.
+
+## Alerts
+
+1. Monitoring backend alert는 Prometheus가 직접 scrape한 backend metric으로 평가한다.
+2. App VM과 MSA alert는 Mimir에 저장된 App metric을 Prometheus가 federation으로 가져와 평가한다.
+3. Prometheus는 firing alert를 Alertmanager로 전달한다.
+4. Alertmanager는 Slack Incoming Webhook으로 firing/resolved 알림을 전송한다.
 
 ## Traces
 
 1. App 서비스는 OpenTelemetry Flask/Requests instrumentation을 사용한다.
 2. Trace context는 MSA 서비스 간 HTTP 호출을 따라 전파된다.
-3. 각 서비스는 OTLP trace를 Monitoring VM의 OpenTelemetry Collector로 gRPC `4317/tcp`를 통해 전송한다.
-4. Collector는 trace를 Tempo로 전달한다.
-5. Tempo는 trace block을 MinIO에 저장하고, Grafana에서 TraceQL로 조회할 수 있게 한다.
+3. 각 서비스는 OTLP trace를 App VM의 Alloy Service로 gRPC `4317/tcp`를 통해 전송한다.
+4. Alloy는 trace를 Monitoring VM의 OpenTelemetry Collector로 전달한다.
+5. Collector는 trace를 Tempo로 전달한다.
+6. Tempo는 trace block을 MinIO에 저장하고, Grafana에서 TraceQL로 조회할 수 있게 한다.
 
 ## Security Posture
 
@@ -91,7 +92,6 @@ App VM
 
 VM 간 통신은 private IP 기반 보안그룹 규칙으로 제한한다.
 
-- App VM -> Monitoring VM: Loki `3100`, OTel `4317`
-- Monitoring VM -> App VM: app service metrics `8080-8085`, Node Exporter `9100`
+- App VM -> Monitoring VM: Loki `3100`, OTel Collector `4317`, Mimir `9009`
 
 Mimir, Tempo, Prometheus, MinIO, Loki는 외부에 공개하지 않는 것을 기준으로 한다.

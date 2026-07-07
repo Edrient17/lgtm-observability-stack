@@ -1,0 +1,240 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-config
+  namespace: msa-demo
+data:
+  config.alloy: |
+    loki.source.file "k3s_pods" {
+      targets = [
+        {
+          "__path__" = "/var/log/containers/*_msa-demo_*.log",
+          "job" = "k3s-pods",
+          "host" = sys.env("APP_HOST_LABEL"),
+          "vm_role" = "app",
+        },
+      ]
+
+      file_match {
+        enabled = true
+        sync_period = "10s"
+      }
+
+      forward_to = [loki.process.k3s_pods.receiver]
+    }
+
+    loki.process "k3s_pods" {
+      stage.cri {}
+
+      stage.json {
+        expressions = {
+          "service" = "service",
+          "trace_id" = "trace_id",
+          "span_id" = "span_id",
+          "level" = "level",
+          "logger" = "logger",
+        }
+      }
+
+      stage.labels {
+        values = {
+          "service" = "",
+          "level" = "",
+          "logger" = "",
+        }
+      }
+
+      stage.structured_metadata {
+        values = {
+          "trace_id" = "",
+          "span_id" = "",
+        }
+      }
+
+      forward_to = [loki.write.loki.receiver]
+    }
+
+    loki.write "loki" {
+      endpoint {
+        url = sys.env("LOKI_PUSH_URL")
+      }
+    }
+
+    prometheus.scrape "msa_demo" {
+      job_name = "msa-demo"
+      scrape_interval = "15s"
+      targets = [
+        {
+          "__address__" = "api-service:8080",
+          "instance" = "app-vm",
+          "vm_role" = "app",
+          "app_service" = "api-service",
+        },
+        {
+          "__address__" = "catalog-service:8081",
+          "instance" = "app-vm",
+          "vm_role" = "app",
+          "app_service" = "catalog-service",
+        },
+        {
+          "__address__" = "inventory-service:8082",
+          "instance" = "app-vm",
+          "vm_role" = "app",
+          "app_service" = "inventory-service",
+        },
+        {
+          "__address__" = "cart-service:8083",
+          "instance" = "app-vm",
+          "vm_role" = "app",
+          "app_service" = "cart-service",
+        },
+        {
+          "__address__" = "order-service:8084",
+          "instance" = "app-vm",
+          "vm_role" = "app",
+          "app_service" = "order-service",
+        },
+        {
+          "__address__" = "payment-service:8085",
+          "instance" = "app-vm",
+          "vm_role" = "app",
+          "app_service" = "payment-service",
+        },
+      ]
+      forward_to = [prometheus.remote_write.mimir.receiver]
+    }
+
+    prometheus.scrape "node_exporter" {
+      job_name = "node-exporter"
+      scrape_interval = "15s"
+      targets = [
+        {
+          "__address__" = "node-exporter:9100",
+          "instance" = "app-vm",
+          "vm_role" = "app",
+        },
+      ]
+      forward_to = [prometheus.remote_write.mimir.receiver]
+    }
+
+    prometheus.remote_write "mimir" {
+      endpoint {
+        url = sys.env("MIMIR_REMOTE_WRITE_URL")
+      }
+    }
+
+    otelcol.receiver.otlp "app" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+
+      output {
+        traces = [otelcol.processor.batch.app.input]
+      }
+    }
+
+    otelcol.processor.batch "app" {
+      output {
+        traces = [otelcol.exporter.otlp.monitoring.input]
+      }
+    }
+
+    otelcol.exporter.otlp "monitoring" {
+      client {
+        endpoint = sys.env("ALLOY_OTLP_EXPORTER_ENDPOINT")
+        tls {
+          insecure = true
+          insecure_skip_verify = true
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: otlp-grpc
+    - name: http-metrics
+      port: 12345
+      targetPort: http-metrics
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alloy
+  namespace: msa-demo
+  labels:
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/part-of: msa-demo
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: alloy
+        app.kubernetes.io/part-of: msa-demo
+    spec:
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.17.0
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/var/lib/alloy/data
+          env:
+            - name: LOKI_PUSH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-demo-config
+                  key: LOKI_PUSH_URL
+            - name: APP_HOST_LABEL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-demo-config
+                  key: APP_HOST_LABEL
+            - name: ALLOY_OTLP_EXPORTER_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-demo-config
+                  key: ALLOY_OTLP_EXPORTER_ENDPOINT
+            - name: MIMIR_REMOTE_WRITE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-demo-config
+                  key: MIMIR_REMOTE_WRITE_URL
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: http-metrics
+              containerPort: 12345
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+              readOnly: true
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: storage
+              mountPath: /var/lib/alloy/data
+      volumes:
+        - name: config
+          configMap:
+            name: alloy-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: storage
+          emptyDir: {}

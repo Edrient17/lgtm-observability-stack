@@ -12,12 +12,12 @@
 | Component | Image | Version | Reason |
 | --- | --- | --- | --- |
 | Grafana | `grafana/grafana-oss` | `12.4.3` | 최신 Grafana 13 major line 대신 안정적인 Grafana 12 line을 사용 |
-| Loki | `grafana/loki` | `3.6.11` | Promtail과 맞춘 안정적인 3.6 line |
-| Promtail | `grafana/promtail` | `3.6.11` | 로그 pipeline 호환성을 위해 Loki와 같은 release line을 사용 |
+| Loki | `grafana/loki` | `3.6.11` | 현재 Grafana stack과 호환되는 안정적인 Loki 3.6 line |
+| Alloy | `grafana/alloy` | `v1.17.0` | App VM 로그, 메트릭, 트레이스를 수집하고 Monitoring VM backend로 전달 |
 | Mimir | `grafana/mimir` | `3.1.2` | Mimir 3 line의 안정적인 patch release |
 | Tempo | `grafana/tempo` | `2.10.7` | Tempo 3 major line은 피하면서 최근 OTLP/TraceQL 기능을 사용할 수 있는 버전 |
 | Prometheus | `prom/prometheus` | `v3.5.4` | 안정적인 Prometheus 3 release branch |
-| Alertmanager | `prom/alertmanager` | `v0.28.1` | Prometheus alert를 Slack으로 전달하기 위한 안정적인 Alertmanager release |
+| Alertmanager | `prom/alertmanager` | `v0.28.1` | Monitoring backend alert를 Slack으로 전달하기 위한 안정적인 Alertmanager release |
 | Node Exporter | `prom/node-exporter` | `v1.11.1` | 안정적인 node-exporter release |
 | OpenTelemetry Collector Contrib | `otel/opentelemetry-collector-contrib` | `0.155.0` | 안정적인 collector release tag |
 | MinIO | `quay.io/minio/minio` | `RELEASE.2025-09-07T16-13-09Z` | MinIO server release tag를 고정합니다. |

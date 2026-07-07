@@ -9,33 +9,19 @@ if [ -f .env ]; then
   # shellcheck disable=SC1091
   . ./.env
   set +a
-fi
 
-if [ -n "${APP_VM_PRIVATE_IP:-}" ]; then
-  app_ip="${APP_VM_PRIVATE_IP}"
-
-  echo "[1/4] Monitoring VM Docker Compose service status"
+  echo "[1/3] Monitoring VM Docker Compose service status"
   docker compose ps
 
   echo
-  echo "[2/4] Monitoring VM local endpoints"
+  echo "[2/3] Monitoring VM local endpoints"
   curl -fsS http://localhost:3000/api/health
   curl -fsS http://localhost:3100/ready
   curl -fsS http://localhost:9009/ready
   curl -fsS http://localhost:3200/ready
 
   echo
-  echo "[3/4] App VM scrape endpoints"
-  curl -fsS "http://${app_ip}:8080/metrics" >/dev/null
-  curl -fsS "http://${app_ip}:8081/metrics" >/dev/null
-  curl -fsS "http://${app_ip}:8082/metrics" >/dev/null
-  curl -fsS "http://${app_ip}:8083/metrics" >/dev/null
-  curl -fsS "http://${app_ip}:8084/metrics" >/dev/null
-  curl -fsS "http://${app_ip}:8085/metrics" >/dev/null
-  curl -fsS "http://${app_ip}:9100/metrics" >/dev/null
-
-  echo
-  echo "[4/4] Monitoring health checks passed."
+  echo "[3/3] Monitoring health checks passed."
 else
   echo "[1/4] App VM K3S resource status"
   kubectl -n msa-demo get pods,svc,daemonset

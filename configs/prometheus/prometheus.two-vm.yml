@@ -32,51 +32,6 @@ scrape_configs:
         labels:
           instance: monitoring-vm
           vm_role: monitoring
-      - targets:
-          - app-vm:9100
-        labels:
-          instance: app-vm
-          vm_role: app
-
-  - job_name: msa-demo
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-          - app-vm:8080
-        labels:
-          instance: app-vm
-          vm_role: app
-          app_service: api-service
-      - targets:
-          - app-vm:8081
-        labels:
-          instance: app-vm
-          vm_role: app
-          app_service: catalog-service
-      - targets:
-          - app-vm:8082
-        labels:
-          instance: app-vm
-          vm_role: app
-          app_service: inventory-service
-      - targets:
-          - app-vm:8083
-        labels:
-          instance: app-vm
-          vm_role: app
-          app_service: cart-service
-      - targets:
-          - app-vm:8084
-        labels:
-          instance: app-vm
-          vm_role: app
-          app_service: order-service
-      - targets:
-          - app-vm:8085
-        labels:
-          instance: app-vm
-          vm_role: app
-          app_service: payment-service
 
   - job_name: grafana
     metrics_path: /metrics
@@ -115,5 +70,19 @@ scrape_configs:
     static_configs:
       - targets:
           - tempo:3200
+        labels:
+          vm_role: monitoring
+
+  - job_name: app-metrics-from-mimir
+    honor_labels: true
+    metrics_path: /prometheus/federate
+    params:
+      match[]:
+        - '{job="msa-demo"}'
+        - '{job="node-exporter",instance="app-vm"}'
+        - '{__name__=~"demo_app_.*"}'
+    static_configs:
+      - targets:
+          - mimir:9009
         labels:
           vm_role: monitoring

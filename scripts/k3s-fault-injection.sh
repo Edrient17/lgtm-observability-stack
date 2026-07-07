@@ -17,7 +17,7 @@ Actions:
   order-down | order-up
   payment-down | payment-up
   node-exporter-down | node-exporter-up
-  promtail-down | promtail-up
+  alloy-down | alloy-up
   error-burst
   recover-all
 EOF
@@ -64,15 +64,15 @@ case "${action}" in
   payment-up) scale_deployment payment-service 1 ;;
   node-exporter-down) delete_daemonset node-exporter ;;
   node-exporter-up) restore_resource k3s/app-vm/node-exporter.yaml ;;
-  promtail-down) delete_daemonset promtail ;;
-  promtail-up) restore_resource k3s/app-vm/promtail.yaml ;;
+  alloy-down) delete_daemonset alloy ;;
+  alloy-up) restore_resource k3s/app-vm/alloy.yaml ;;
   error-burst) error_burst ;;
   recover-all)
     for deployment in api-service catalog-service inventory-service cart-service order-service payment-service; do
       scale_deployment "${deployment}" 1
     done
     restore_resource k3s/app-vm/node-exporter.yaml
-    restore_resource k3s/app-vm/promtail.yaml
+    restore_resource k3s/app-vm/alloy.yaml
     ;;
   -h|--help|help|"")
     usage

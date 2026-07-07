@@ -64,7 +64,7 @@ services:
       - ./configs/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - mimir-data:/data/mimir
     ports:
-      - "127.0.0.1:9009:9009"
+      - "9009:9009"
     networks:
       - observability
     depends_on:
@@ -120,8 +120,6 @@ services:
       - prometheus-data:/prometheus
     ports:
       - "127.0.0.1:9090:9090"
-    extra_hosts:
-      - "app-vm:${APP_VM_PRIVATE_IP}"
     networks:
       - observability
     depends_on:

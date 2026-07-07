@@ -18,49 +18,41 @@
 - Symptom:
   - Grafana dashboard는 열리지만 panel에 `No data`가 표시됨.
 - Root cause:
-  - App VM 트래픽이 생성되지 않았거나, Prometheus target이 down 상태이거나, Mimir remote write가 아직 준비되지 않았을 수 있음.
+  - App VM 트래픽이 생성되지 않았거나, Alloy가 Mimir/Loki/OTel Collector로 데이터를 보내지 못하고 있을 수 있음.
 - Fix:
   - App VM에서 `./scripts/random-demo-traffic.sh`를 실행
   - `up`과 `sum by (service) (rate(demo_app_requests_total[5m]))`를 조회
-  - Grafana Explore 또는 Prometheus UI에서 Prometheus target 상태를 확인
+  - App VM에서 `kubectl -n msa-demo logs daemonset/alloy --tail=100`으로 전송 오류를 확인
+  - `k3s/app-vm/configmap.yaml`의 `LOKI_PUSH_URL`, `MIMIR_REMOTE_WRITE_URL`, `ALLOY_OTLP_EXPORTER_ENDPOINT`가 Monitoring VM private IP를 가리키는지 확인
 
-## Case 3: New App VM Metrics Are Reachable But Grafana Shows Services Down
+## Case 3: New App VM Is Running But Grafana Shows No App Metrics
 
 - Symptom:
-  - Monitoring VM host에서 `curl http://<new-app-vm-private-ip>:8080/metrics`는 성공한다.
-  - Grafana `MSA Overview`의 `Service Up` panel에서는 `api-service`, `cart-service`, `catalog-service`, `inventory-service`, `order-service`, `payment-service`가 모두 `DOWN`으로 표시된다.
-  - Prometheus/Grafana dashboard에는 이전 App VM target 상태가 남아 있는 것처럼 보인다.
+  - App VM에서 `kubectl -n msa-demo get pods,svc,daemonset`은 정상이다.
+  - App VM local `/metrics` endpoint도 응답한다.
+  - Grafana `MSA Overview` 또는 `VM Metrics`에서 App VM metric이 보이지 않는다.
 - Root cause:
-  - 새 App VM으로 교체하면서 Monitoring VM의 `.env`에 있는 `APP_VM_PRIVATE_IP`를 수정했지만, Prometheus container가 재생성되지 않아 `extra_hosts`의 `app-vm` 매핑이 예전 private IP를 계속 사용했다.
-  - Docker Compose `extra_hosts` 값은 container 생성 시점에 `/etc/hosts`에 반영되므로 단순 `docker compose restart prometheus`만으로는 새 IP가 반영되지 않을 수 있다.
+  - Alloy가 App VM 내부 target scrape에는 성공하지만, Monitoring VM의 Mimir `9009/tcp`로 remote_write 하지 못하는 상태일 수 있다.
+  - 보안그룹에서 Monitoring VM `9009/tcp` inbound가 App VM private IP에 열려 있지 않거나, `MIMIR_REMOTE_WRITE_URL` 값이 잘못되었을 수 있다.
 - Check:
-  - Monitoring VM host에서 새 App VM endpoint 접근을 확인한다.
+  - App VM에서 Monitoring VM Mimir ready endpoint를 확인한다.
 
     ```bash
-    curl http://<new-app-vm-private-ip>:8080/metrics
-    curl http://<new-app-vm-private-ip>:9100/metrics
+    curl http://<monitoring-vm-private-ip>:9009/ready
     ```
 
-  - Prometheus container 내부의 `app-vm` 해석 결과를 확인한다.
+  - Alloy 로그를 확인한다.
 
     ```bash
-    docker compose exec prometheus getent hosts app-vm
+    kubectl -n msa-demo logs daemonset/alloy --tail=100
     ```
-
-  - 출력 IP가 새 App VM private IP와 다르면 Prometheus container가 예전 `extra_hosts` 값을 보고 있는 상태다.
 - Fix:
-  - Monitoring VM의 `.env`에서 `APP_VM_PRIVATE_IP`를 새 App VM private IP로 수정한다.
-  - Prometheus container를 강제로 재생성한다.
+  - Monitoring VM 보안그룹에서 `9009/tcp`를 App VM private IP에 허용한다.
+  - App VM의 `k3s/app-vm/configmap.yaml`에서 `MIMIR_REMOTE_WRITE_URL`을 수정한다.
+  - K3S 리소스를 다시 적용하고 Alloy를 재시작한다.
 
     ```bash
-    docker compose up -d --force-recreate prometheus
+    kubectl apply -k ./k3s/app-vm
+    kubectl -n msa-demo rollout restart daemonset/alloy
     ```
-
-  - Prometheus container 내부에서 새 App VM target 접근을 확인한다.
-
-    ```bash
-    docker compose exec prometheus getent hosts app-vm
-    docker compose exec prometheus wget -qO- http://app-vm:8080/metrics | head
-    ```
-
   - Grafana `MSA Overview`를 새로고침하고 `Service Up`이 `UP`으로 돌아오는지 확인한다.

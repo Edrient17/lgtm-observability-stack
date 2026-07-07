@@ -5,4 +5,4 @@ resources:
   - configmap.yaml
   - msa-services.yaml
   - node-exporter.yaml
-  - promtail.yaml
+  - alloy.yaml

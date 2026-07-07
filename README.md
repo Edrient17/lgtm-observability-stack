@@ -6,9 +6,10 @@
 
 ## Data Flow
 
-- Logs: App VM K3S pod logs -> Promtail -> Loki -> Grafana 순서로 전달
-- Metrics: Prometheus가 App VM 서비스와 Node Exporter를 pull하고 Mimir에 저장한 뒤 Grafana에서 조회
-- Traces: MSA 서비스가 OTLP gRPC로 OTel Collector에 trace를 보내고, Collector가 Tempo로 전달
+- Logs: App VM K3S pod logs -> Alloy -> Loki -> Grafana 순서로 전달
+- Metrics: App VM Alloy가 MSA 서비스와 Node Exporter를 scrape하고 Mimir로 remote_write
+- Alerts: Prometheus가 backend metric과 Mimir에서 federate한 App metric을 평가하고 Alertmanager로 전달
+- Traces: MSA 서비스가 App VM Alloy로 trace를 보내고, Alloy가 Monitoring VM OTel Collector를 거쳐 Tempo로 전달
 - Storage: Mimir와 Tempo는 block 데이터를 MinIO에 저장
 
 ## Demo Request Flows
@@ -33,7 +34,7 @@ Monitoring VM:
 
 ```bash
 cp .env.example .env
-# edit APP_VM_PRIVATE_IP, GRAFANA_ADMIN_PASSWORD, MINIO_ROOT_PASSWORD
+# edit GRAFANA_ADMIN_PASSWORD, MINIO_ROOT_PASSWORD
 docker compose up -d
 docker compose ps
 ```
@@ -62,10 +63,11 @@ kubectl -n msa-demo get pods,svc,daemonset
 | Monitoring | Loki | 3100 | 로그 수집 및 조회 |
 | Monitoring | Mimir | 9009 | 메트릭 저장 및 조회 |
 | Monitoring | Tempo | 3200 | 트레이스 조회 |
-| Monitoring | OTel Collector | 4317, 4318 | 트레이스 수집 |
-| Monitoring | Prometheus | 9090 | 메트릭 scrape 및 remote write |
-| Monitoring | Alertmanager | 9093 | Prometheus alert 수신 및 Slack 알림 전송 |
+| Monitoring | OTel Collector | 4317, 4318 | 트레이스 수집 및 Tempo 전달 |
+| Monitoring | Prometheus | 9090 | Monitoring VM backend 메트릭 scrape 및 remote write |
+| Monitoring | Alertmanager | 9093 | Monitoring backend alert Slack 알림 전송 |
 | Monitoring | MinIO | 9000, 9001 | 오브젝트 스토리지 |
+| App | Alloy | 4317, 12345 | App VM 로그, 메트릭, 트레이스 수집 |
 | App | api-service | 8080 | 데모 서비스 진입점 |
 | App | catalog-service | 8081 | 상품 카탈로그 |
 | App | inventory-service | 8082 | 재고 조회 및 예약 |
@@ -82,21 +84,15 @@ Monitoring VM inbound:
 | ---: | --- | --- |
 | 22/tcp | Your IP | SSH 접속 |
 | 3000/tcp | Your IP | Grafana Web UI |
-| 3100/tcp | App VM private IP | Promtail -> Loki 로그 전송 |
-| 4317/tcp | App VM private IP | MSA services -> OTel Collector OTLP gRPC |
+| 3100/tcp | App VM private IP | Alloy -> Loki 로그 전송 |
+| 4317/tcp | App VM private IP | Alloy -> OTel Collector OTLP gRPC |
+| 9009/tcp | App VM private IP | Alloy -> Mimir remote_write |
 
 App VM inbound:
 
 | Port | Source | Purpose |
 | ---: | --- | --- |
 | 22/tcp | Your IP | SSH 접속 |
-| 8080/tcp | Monitoring VM private IP | API Service 메트릭 scrape |
-| 8081/tcp | Monitoring VM private IP | Catalog Service 메트릭 scrape |
-| 8082/tcp | Monitoring VM private IP | Inventory Service 메트릭 scrape |
-| 8083/tcp | Monitoring VM private IP | Cart Service 메트릭 scrape |
-| 8084/tcp | Monitoring VM private IP | Order Service 메트릭 scrape |
-| 8085/tcp | Monitoring VM private IP | Payment Service 메트릭 scrape |
-| 9100/tcp | Monitoring VM private IP | Node Exporter 메트릭 scrape |
 
 ## Generate Traffic
 
@@ -118,7 +114,7 @@ mkdir -p ./logs
 ```
 
 기본값은 정상 트래픽 위주로 생성하며, `/error` 요청은 포함하지 않는다.
-오류율 alert 테스트는 `./scripts/k3s-fault-injection.sh error-burst`로 별도 수행한다.
+오류율 관찰이 필요할 때는 `./scripts/k3s-fault-injection.sh error-burst`로 별도 생성한다.
 
 Cron example:
 
@@ -157,7 +153,10 @@ TraceQL:
 | `docker-compose.yml` | Monitoring VM 실행 정의 |
 | `.env.example` | Monitoring VM용 환경변수 템플릿 |
 | `k3s/app-vm` | App VM demo MSA K3S manifest |
-| `configs/prometheus/prometheus.two-vm.yml` | 두 VM을 scrape하는 Prometheus 설정 |
+| `configs/prometheus/prometheus.two-vm.yml` | Monitoring VM backend를 scrape하는 Prometheus 설정 |
+| `configs/prometheus/rules/backend-alerts.yml` | Monitoring VM backend alert rule |
+| `configs/prometheus/rules/app-alerts.yml` | App VM 및 MSA alert rule |
+| `configs/alertmanager/alertmanager.yml` | Slack alert routing 설정 |
 | `msa-demo` | 6개 MSA 데모 서비스가 공유하는 이미지 소스 |
 | `scripts/random-demo-traffic.sh` | 장기 관찰용 랜덤 트래픽 생성 스크립트 |
 | `scripts/k3s-fault-injection.sh` | K3S 배포용 장애 주입 및 복구 스크립트 |
@@ -167,7 +166,6 @@ TraceQL:
 - `docs/architecture.md` # LGTM observability stack 아키텍처
 - `docs/two-vm-deployment.md` # 두 VM 배포 및 검증
 - `docs/app-vm-k3s.md` # App VM K3S 선택 배포
-- `docs/validation.md` # Prometheus, Grafana, Loki, Tempo, Mimir 검증
-- `docs/alert-scenarios.md` # alert 시나리오 및 검증
+- `docs/validation.md` # Grafana, Loki, Tempo, Mimir, Alloy 검증
 - `docs/troubleshooting.md` # 문제 해결
 - `docs/version-policy.md` # 버전 정책

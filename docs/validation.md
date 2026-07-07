@@ -3,9 +3,8 @@
 ## Monitoring VM
 
 - [ ] `.env`를 `.env.example`에서 생성
-- [ ] `APP_VM_PRIVATE_IP`가 App VM private IP를 가리킨다.
 - [ ] `docker compose up -d`가 정상 완료된다.
-- [ ] `docker compose ps`에서 Grafana, Loki, Mimir, Tempo, Prometheus, OTel Collector, MinIO, Node Exporter가 실행 중이다.
+- [ ] `docker compose ps`에서 Grafana, Loki, Mimir, Tempo, Prometheus, Alertmanager, OTel Collector, MinIO, Node Exporter가 실행 중이다.
 - [ ] Grafana가 `http://<monitoring-vm-public-ip>:3000`에서 접속된다.
 
 ## App VM
@@ -14,24 +13,22 @@
 - [ ] `k3s/app-vm/configmap.yaml`의 Monitoring VM private IP가 올바르다.
 - [ ] `./scripts/k3s-load-demo-image.sh`로 `msa-demo:local` 이미지를 k3s containerd에 import했다.
 - [ ] `kubectl apply -k ./k3s/app-vm`가 정상 완료된다.
-- [ ] `kubectl -n msa-demo get pods,svc,daemonset`에서 demo MSA, Promtail, Node Exporter가 실행 중이다.
+- [ ] `kubectl -n msa-demo get pods,svc,daemonset`에서 demo MSA, Alloy, Node Exporter가 실행 중이다.
 
 ## Connectivity
 
 Monitoring VM에서 확인
 
-- [ ] `curl http://<app-vm-private-ip>:8080/metrics`가 성공
-- [ ] `curl http://<app-vm-private-ip>:8081/metrics`가 성공
-- [ ] `curl http://<app-vm-private-ip>:8082/metrics`가 성공
-- [ ] `curl http://<app-vm-private-ip>:8083/metrics`가 성공
-- [ ] `curl http://<app-vm-private-ip>:8084/metrics`가 성공
-- [ ] `curl http://<app-vm-private-ip>:8085/metrics`가 성공
-- [ ] `curl http://<app-vm-private-ip>:9100/metrics`가 성공
+- [ ] `curl http://localhost:3100/ready`가 성공
+- [ ] `curl http://localhost:9009/ready`가 성공
+- [ ] `curl http://localhost:3200/ready`가 성공
 
 App VM에서 확인
 
 - [ ] `curl http://<monitoring-vm-private-ip>:3100/ready`가 최종적으로 `ready`를 반환한다.
+- [ ] `curl http://<monitoring-vm-private-ip>:9009/ready`가 성공한다.
 - [ ] `curl http://<monitoring-vm-private-ip>:4318/`가 `404 page not found` 같은 HTTP 응답을 반환한다.
+- [ ] `kubectl -n msa-demo logs daemonset/alloy --tail=100`에서 Loki, Mimir, OTel Collector 전송 오류가 없다.
 
 ## Logs
 
@@ -66,12 +63,10 @@ App VM에서 확인
 
 ## Alerts
 
-- [ ] Prometheus가 `configs/prometheus/rules/node-alerts.yml`을 로드한다.
-- [ ] Alertmanager가 실행 중이며 `.env`의 `SLACK_WEBHOOK_URL`을 사용한다.
-- [ ] Grafana에서 `Alerts Overview` 대시보드가 표시된다.
-- [ ] App VM 서비스 하나를 약 1분 동안 중지하면 `MsaServiceDown`이 firing 상태가 된다.
-- [ ] `MsaServiceDown` firing 알림이 Slack 채널에 전송된다.
-- [ ] `/error` 요청을 반복 생성하면 `MsaHighErrorRate`가 firing 상태가 된다.
-- [ ] App VM Node Exporter를 약 1분 동안 중지하면 `AppVmNodeExporterDown`이 firing 상태가 된다.
-- [ ] 중지한 컨테이너를 다시 시작한 뒤 alert가 해제되는 것을 확인한다.
-- [ ] resolved 알림이 Slack 채널에 전송된다.
+- [ ] Monitoring VM `.env`에 `SLACK_WEBHOOK_URL`이 설정되어 있다.
+- [ ] Prometheus가 `configs/prometheus/rules/backend-alerts.yml`을 로드한다.
+- [ ] Prometheus가 `configs/prometheus/rules/app-alerts.yml`을 로드한다.
+- [ ] Alertmanager가 실행 중이며 Slack 알림을 전송할 수 있다.
+- [ ] backend alert 대상은 Grafana, Loki, Mimir, Tempo, Alertmanager, Monitoring VM Node Exporter다.
+- [ ] App alert 대상은 MSA service up, App VM Node Exporter, App metric missing, error rate, latency p95다.
+- [ ] Prometheus `app-metrics-from-mimir` scrape job이 `UP`이고 App metric을 federate한다.
