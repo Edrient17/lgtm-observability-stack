@@ -8,6 +8,8 @@ metadata:
     app.kubernetes.io/part-of: msa-demo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: api-service
@@ -83,6 +85,8 @@ metadata:
     app.kubernetes.io/part-of: msa-demo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: catalog-service
@@ -150,6 +154,8 @@ metadata:
     app.kubernetes.io/part-of: msa-demo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: inventory-service
@@ -217,6 +223,8 @@ metadata:
     app.kubernetes.io/part-of: msa-demo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: cart-service
@@ -288,6 +296,8 @@ metadata:
     app.kubernetes.io/part-of: msa-demo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: order-service
@@ -359,6 +369,8 @@ metadata:
     app.kubernetes.io/part-of: msa-demo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: payment-service
