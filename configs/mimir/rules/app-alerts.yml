@@ -9,7 +9,7 @@ groups:
           service: alloy
         annotations:
           summary: "App VM metrics are missing"
-          description: "Prometheus cannot see MSA scrape status federated from Mimir. Check Alloy metric scraping, Mimir remote_write, and the Prometheus Mimir federation job."
+          description: "Mimir cannot see MSA metrics from Alloy. Check Alloy metric scraping, Mimir remote_write, and App VM connectivity."
 
       - alert: MsaServiceDown
         expr: up{job="msa-demo"} == 0

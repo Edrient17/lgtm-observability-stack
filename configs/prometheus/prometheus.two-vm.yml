@@ -83,22 +83,3 @@ scrape_configs:
           - tempo:3200
         labels:
           vm_role: monitoring
-
-  - job_name: app-metrics-from-mimir
-    honor_labels: true
-    metrics_path: /prometheus/federate
-    params:
-      match[]:
-        - '{job="msa-demo"}'
-        - '{job="node-exporter",instance="app-vm"}'
-        - '{__name__=~"demo_app_.*"}'
-    static_configs:
-      - targets:
-          - mimir:9009
-        labels:
-          vm_role: monitoring
-    metric_relabel_configs:
-      - source_labels:
-          - replica
-        regex: prometheus-1
-        action: drop

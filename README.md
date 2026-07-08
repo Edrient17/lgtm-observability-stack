@@ -8,7 +8,7 @@
 
 - Logs: App VM K3S pod logs -> Alloy -> Loki -> Grafana 순서로 전달
 - Metrics: App VM Alloy가 MSA 서비스와 Node Exporter를 scrape하고 Mimir로 remote_write
-- Alerts: Prometheus가 backend metric과 Mimir에서 federate한 App metric을 평가하고 Alertmanager로 전달
+- Alerts: Prometheus는 Monitoring backend alert를 평가하고, Mimir Ruler는 App/MSA alert를 평가한 뒤 Alertmanager로 전달
 - Traces: MSA 서비스가 App VM Alloy로 trace를 보내고, Alloy가 Monitoring VM OTel Collector를 거쳐 Tempo로 전달
 - Storage: Mimir와 Tempo는 block 데이터를 MinIO에 저장
 
@@ -155,7 +155,7 @@ TraceQL:
 | `k3s/app-vm` | App VM demo MSA K3S manifest |
 | `configs/prometheus/prometheus.two-vm.yml` | Monitoring VM backend를 scrape하는 Prometheus 설정 |
 | `configs/prometheus/rules/backend-alerts.yml` | Monitoring VM backend alert rule |
-| `configs/prometheus/rules/app-alerts.yml` | App VM 및 MSA alert rule |
+| `configs/mimir/rules/app-alerts.yml` | Mimir Ruler가 평가하는 App VM 및 MSA alert rule |
 | `configs/alertmanager/alertmanager.yml` | Slack alert routing 설정 |
 | `msa-demo` | 6개 MSA 데모 서비스가 공유하는 이미지 소스 |
 | `scripts/random-demo-traffic.sh` | 장기 관찰용 랜덤 트래픽 생성 스크립트 |

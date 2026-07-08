@@ -70,6 +70,34 @@ services:
     depends_on:
       minio-init:
         condition: service_completed_successfully
+      alertmanager:
+        condition: service_started
+
+  mimir-rules-init:
+    image: curlimages/curl:${CURL_VERSION:-8.16.0}
+    depends_on:
+      mimir:
+        condition: service_started
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        until curl -fsS http://mimir:9009/ready; do
+          echo "waiting for mimir..."
+          sleep 2
+        done
+
+        until \
+          curl -fsS -X POST -H 'Content-Type: application/yaml' --data-binary @/rules/app-alerts.yml http://mimir:9009/prometheus/config/v1/rules/app-vm-msa-alerts || \
+          curl -fsS -X PUT -H 'Content-Type: application/yaml' --data-binary @/rules/app-alerts.yml http://mimir:9009/prometheus/config/v1/rules/app-vm-msa-alerts; do
+          echo "waiting for mimir ruler api..."
+          sleep 2
+        done
+    volumes:
+      - ./configs/mimir/rules/app-alerts.yml:/rules/app-alerts.yml:ro
+    networks:
+      - observability
+    restart: "no"
 
   tempo:
     image: grafana/tempo:${TEMPO_VERSION:-2.10.7}

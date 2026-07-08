@@ -12,7 +12,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "mimir"
       },
       "fieldConfig": {
         "defaults": {
@@ -70,22 +70,95 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum(ALERTS{alertstate=\"firing\"})",
-          "legendFormat": "firing",
+          "expr": "sum(ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighErrorRate|MsaHighLatencyP95\"}) or vector(0)",
+          "legendFormat": "app-msa-firing",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Current Firing Alert Count",
+      "title": "App/MSA Firing Alert Count",
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "OK"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(ALERTS{alertstate=\"firing\"}) or vector(0)",
+          "legendFormat": "backend-firing",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Backend Firing Alert Count",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
       },
       "fieldConfig": {
         "defaults": {
@@ -124,11 +197,11 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 16,
-        "x": 8,
+        "w": 8,
+        "x": 16,
         "y": 0
       },
-      "id": 2,
+      "id": 3,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
@@ -147,7 +220,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "mimir"
           },
           "editorMode": "code",
           "expr": "up{job=\"msa-demo\"}",
@@ -162,7 +235,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "mimir"
       },
       "fieldConfig": {
         "defaults": {
@@ -171,43 +244,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 4
-      },
-      "id": 3,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"pending\"})",
-          "legendFormat": "{{alertname}} {{severity}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Pending Alerts",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
         "y": 4
       },
       "id": 4,
@@ -215,16 +254,50 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"firing\"})",
+          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"pending\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighErrorRate|MsaHighLatencyP95\"})",
           "legendFormat": "{{alertname}} {{severity}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Firing Alert Timeline",
+      "title": "App/MSA Pending Alerts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "editorMode": "code",
+          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighErrorRate|MsaHighLatencyP95\"})",
+          "legendFormat": "{{alertname}} {{severity}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "App/MSA Firing Timeline",
       "type": "timeseries"
     },
     {
@@ -271,9 +344,9 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 12
+        "y": 11
       },
-      "id": 5,
+      "id": 6,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
@@ -311,22 +384,56 @@
       },
       "fieldConfig": {
         "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 11
+      },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"firing\"})",
+          "legendFormat": "{{alertname}} {{severity}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Backend Firing Timeline",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
           "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 6,
-        "w": 16,
-        "x": 8,
-        "y": 12
+        "w": 8,
+        "x": 16,
+        "y": 11
       },
-      "id": 6,
+      "id": 8,
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "mimir"
           },
           "editorMode": "code",
           "expr": "100 * (((sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\",status=~\"5..\"}[5m])) or sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\"}[5m])) * 0) / clamp_min(sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\"}[5m])), 0.001)))",

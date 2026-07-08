@@ -163,7 +163,7 @@ mkdir -p /home/ubuntu/lgtm-observability-stack/logs
 - Logs: `{job="k3s-pods", host="app-vm"}`
 - Traces: `{ resource.service.name = "api-service" }`
 - MSA traces: `{ resource.service.name = "api-service" || resource.service.name = "cart-service" || resource.service.name = "order-service" }`
-- Alerts: Prometheus가 backend metric과 Mimir federation 기반 App metric을 평가하고 Alertmanager로 전달
+- Alerts: Prometheus는 backend metric alert를 평가하고, Mimir Ruler는 App/MSA metric alert를 평가한 뒤 Alertmanager로 전달
 
 ## Security Group Checklist
 

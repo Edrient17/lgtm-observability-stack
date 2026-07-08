@@ -57,7 +57,7 @@
     ```
   - Grafana `MSA Overview`를 새로고침하고 `Service Up`이 `UP`으로 돌아오는지 확인한다.
 
-## Case 4: MSA Dashboard Shows Duplicated App Metrics
+## Case 4: MSA Dashboard Shows Duplicated App Metrics During Migration
 
 - Symptom:
   - Grafana `MSA Overview`에서 `Service Up` 행이 비정상적으로 많이 표시된다.
@@ -65,8 +65,8 @@
   - PromQL 결과에 `replica="prometheus-1"`가 붙은 App metric series가 함께 보인다.
 - Root cause:
   - App VM metric은 Alloy가 Mimir로 `remote_write` 한다.
-  - App/MSA alert 평가를 위해 Prometheus가 Mimir의 `/prometheus/federate`에서 App metric을 가져온다.
-  - 이때 Prometheus가 federation으로 가져온 App metric까지 다시 Mimir로 `remote_write`하면 Mimir 안에 동일 App metric이 중복 저장된다.
+  - 이전 실험 구조에서 App/MSA alert 평가를 위해 Prometheus가 Mimir의 App metric을 다시 가져오도록 구성한 적이 있다.
+  - 이때 Prometheus가 가져온 App metric까지 다시 Mimir로 `remote_write`하면 Mimir 안에 동일 App metric이 중복 저장된다.
 - Check:
   - Grafana Explore에서 Mimir datasource로 다음을 조회한다.
 
@@ -75,7 +75,7 @@
     ```
 
   - 결과에 원본 series와 함께 `replica="prometheus-1"`가 붙은 series가 보이면 Prometheus가 federated App metric을 재적재한 상태다.
-  - Prometheus 설정에서 `app-metrics-from-mimir` scrape job과 `remote_write.write_relabel_configs`를 확인한다.
+  - 현재 구조에서는 App/MSA alert를 Mimir Ruler가 평가하므로 Prometheus에 App metric federation job이 없어야 한다.
 
     ```bash
     docker compose exec prometheus promtool check config /etc/prometheus/prometheus.yml
@@ -99,7 +99,7 @@
             action: drop
     ```
 
-  - Mimir federation으로 가져온 재적재본은 Prometheus 내부 alert 평가에만 사용하고, 다시 Mimir로 쓰지 않는다.
+  - App/MSA alert는 Prometheus federation 대신 Mimir Ruler로 평가한다.
   - 대시보드 쿼리에는 필요 시 `replica!="prometheus-1"` 조건을 추가해 기존 중복 sample의 영향을 줄인다.
 
     ```promql
