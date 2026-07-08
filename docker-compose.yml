@@ -2,6 +2,7 @@ name: lgtm-monitoring-stack
 
 services:
   minio:
+    container_name: minio
     image: quay.io/minio/minio:${MINIO_VERSION:-RELEASE.2025-09-07T16-13-09Z}
     command: server /data --console-address ":9001"
     environment:
@@ -15,6 +16,7 @@ services:
       - observability
 
   minio-init:
+    container_name: minio-init
     image: quay.io/minio/mc:${MINIO_MC_VERSION:-RELEASE.2025-08-13T08-35-41Z}
     depends_on:
       - minio
@@ -38,6 +40,7 @@ services:
     restart: "no"
 
   loki:
+    container_name: loki
     image: grafana/loki:${LOKI_VERSION:-3.6.11}
     command:
       - -config.file=/etc/loki/loki-config.yaml
@@ -52,6 +55,7 @@ services:
       - minio-init
 
   mimir:
+    container_name: mimir
     image: grafana/mimir:${MIMIR_VERSION:-3.1.2}
     command:
       - -config.file=/etc/mimir/mimir-config.yaml
@@ -74,6 +78,7 @@ services:
         condition: service_started
 
   mimir-rules-init:
+    container_name: mimir-rules-init
     image: curlimages/curl:${CURL_VERSION:-8.16.0}
     depends_on:
       mimir:
@@ -98,6 +103,7 @@ services:
     restart: "no"
 
   tempo:
+    container_name: tempo
     image: grafana/tempo:${TEMPO_VERSION:-2.10.7}
     command:
       - -config.file=/etc/tempo/tempo-config.yaml
@@ -120,6 +126,7 @@ services:
         condition: service_started
 
   otel-collector:
+    container_name: otel-collector
     image: otel/opentelemetry-collector-contrib:${OTEL_COLLECTOR_VERSION:-0.155.0}
     command:
       - --config=/etc/otelcol/otel-collector-config.yaml
@@ -134,6 +141,7 @@ services:
       - tempo
 
   prometheus:
+    container_name: prometheus
     image: prom/prometheus:${PROMETHEUS_VERSION:-v3.5.4}
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -141,7 +149,7 @@ services:
       - --storage.tsdb.retention.time=${PROMETHEUS_LOCAL_RETENTION:-168h}
       - --web.enable-lifecycle
     volumes:
-      - ./configs/prometheus/prometheus.two-vm.yml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./configs/prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     ports:
@@ -154,6 +162,7 @@ services:
       - alertmanager
 
   alertmanager:
+    container_name: alertmanager
     image: prom/alertmanager:${ALERTMANAGER_VERSION:-v0.28.1}
     entrypoint:
       - /bin/sh
@@ -179,6 +188,7 @@ services:
       - observability
 
   node-exporter:
+    container_name: node-exporter-monitoring
     image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.11.1}
     command:
       - --path.rootfs=/host
@@ -191,6 +201,7 @@ services:
       - observability
 
   grafana:
+    container_name: grafana
     image: grafana/grafana-oss:${GRAFANA_VERSION:-12.4.3}
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}

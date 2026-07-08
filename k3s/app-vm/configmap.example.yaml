@@ -8,8 +8,6 @@ data:
   OTEL_EXPORTER_OTLP_INSECURE: "true"
   ALLOY_OTLP_EXPORTER_ENDPOINT: "<monitoring-vm-private-ip>:4317"
   MIMIR_REMOTE_WRITE_URL: "http://<monitoring-vm-private-ip>:9009/api/v1/push"
-  INVENTORY_LOW_STOCK_CHANCE: "0.01"
-  PAYMENT_DECLINE_CHANCE: "0.02"
   LOG_LEVEL: "INFO"
   APP_HOST_LABEL: "app-vm"
   LOKI_PUSH_URL: "http://<monitoring-vm-private-ip>:3100/loki/api/v1/push"
