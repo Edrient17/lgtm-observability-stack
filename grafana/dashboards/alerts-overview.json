@@ -46,8 +46,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 8,
+        "h": 7,
+        "w": 6,
         "x": 0,
         "y": 0
       },
@@ -119,9 +119,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 8,
+        "h": 7,
+        "w": 6,
+        "x": 6,
         "y": 0
       },
       "id": 2,
@@ -196,9 +196,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 16,
+        "h": 7,
+        "w": 6,
+        "x": 18,
         "y": 0
       },
       "id": 3,
@@ -224,7 +224,7 @@
           },
           "editorMode": "code",
           "expr": "up{job=\"msa-demo\"}",
-          "legendFormat": "{{app_service}}",
+          "legendFormat": "{{app_service}} scrape",
           "range": true,
           "refId": "A"
         }
@@ -247,7 +247,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 4
+        "y": 7
       },
       "id": 4,
       "targets": [
@@ -281,7 +281,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 4
+        "y": 7
       },
       "id": 5,
       "targets": [
@@ -341,10 +341,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 0,
-        "y": 11
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 0
       },
       "id": 6,
       "options": {
@@ -389,10 +389,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 8,
-        "y": 11
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 14
       },
       "id": 7,
       "targets": [
@@ -409,40 +409,6 @@
         }
       ],
       "title": "Backend Firing Timeline",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "mimir"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 16,
-        "y": 11
-      },
-      "id": 8,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "mimir"
-          },
-          "editorMode": "code",
-          "expr": "100 * (((sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\",status=~\"5..\"}[5m])) or sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\"}[5m])) * 0) / clamp_min(sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\"}[5m])), 0.001)))",
-          "legendFormat": "{{service}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "MSA Error Rate",
       "type": "timeseries"
     }
   ],
