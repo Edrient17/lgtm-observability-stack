@@ -35,11 +35,14 @@ App VM에서 확인
 - [ ] Grafana에서 Loki datasource가 healthy 상태이다.
 - [ ] `{job="k3s-pods", host="app-vm"}` 쿼리로 App 로그가 조회된다.
 - [ ] 로그에 `service`, `trace_id`, `span_id` 필드가 포함된다.
-- [ ] `/checkout` 트래픽 이후 `payment-service` 오류 로그를 확인할 수 있다.
+- [ ] 정상 트래픽 생성 시 App 로그가 지속적으로 수집된다.
 
 ## Metrics
 
 - [ ] Grafana에서 Mimir datasource가 healthy 상태이다.
+- [ ] Grafana의 Mimir datasource type은 `Prometheus`, URL은 `http://mimir:9009/prometheus`이다.
+- [ ] App VM Alloy의 `prometheus.scrape` component는 `prometheus.remote_write.mimir.receiver`로 metric을 전달한다.
+- [ ] App VM의 `MIMIR_REMOTE_WRITE_URL`은 `http://<monitoring-vm-private-ip>:9009/api/v1/push`이다.
 - [ ] `up` 쿼리에서 Monitoring VM과 App VM target이 표시된다.
 - [ ] `sum by (service) (rate(demo_app_requests_total[5m]))`에서 활성 MSA 서비스 트래픽이 표시된다.
 - [ ] VM Metrics dashboard에서 CPU, memory, disk, network panel이 표시된다.
@@ -59,7 +62,7 @@ App VM에서 확인
 - [ ] App VM에서 `scripts/random-demo-traffic.sh`를 수동 실행할 수 있다.
 - [ ] 여러 날 관찰을 위한 cron이 등록되어 있다.
 - [ ] `logs/random-demo-traffic.log`에 `/browse`, `/cart/add`, `/checkout`, `/work` 요청이 기록된다.
-- [ ] 오류율 테스트가 필요할 때 `./scripts/k3s-fault-injection.sh error-burst`로 `/error` 요청을 별도 생성할 수 있다.
+- [ ] 장애 테스트는 정상 트래픽을 흘려둔 상태에서 K3S 리소스 또는 Monitoring backend 컴포넌트를 중단하고 복구하는 방식으로 수행한다.
 
 ## Alerts
 
@@ -68,5 +71,5 @@ App VM에서 확인
 - [ ] Mimir Ruler가 `configs/mimir/rules/app-alerts.yml`을 로드한다.
 - [ ] Alertmanager가 실행 중이며 Slack 알림을 전송할 수 있다.
 - [ ] backend alert 대상은 Grafana, Loki, Mimir, Tempo, Alertmanager, Monitoring VM Node Exporter다.
-- [ ] App alert 대상은 MSA service up, App VM Node Exporter, App metric missing, error rate, latency p95다.
+- [ ] App alert 대상은 MSA service up, App VM Node Exporter, App metric missing, 장애 상황의 error rate/latency p95다.
 - [ ] Mimir datasource에서 `ALERTS`와 `up{job="msa-demo"}` 쿼리로 App/MSA alert 상태를 확인할 수 있다.

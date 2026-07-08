@@ -1,13 +1,29 @@
 # Version Policy
 
-## Strategy
+이 문서는 프로젝트에서 사용하는 플랫폼, 런타임, 컨테이너 이미지 버전을 관리한다.
+README에는 요약만 두고, 실제 버전 기준과 변경 절차는 이 문서를 기준으로 한다.
+
+## 플랫폼 및 런타임
+
+| 구분 | 구성요소 | 현재 프로젝트 기준 |
+| --- | --- | --- |
+| OS | Ubuntu | `24.04 LTS` |
+| Container Runtime | Docker Engine | `26.x` 이상 |
+| Compose | Docker Compose | `v2.x` 이상 |
+| Kubernetes Runtime | K3S | 단일 노드 K3S |
+| Kubernetes CLI | kubectl | K3S server version과 호환 |
+| Source Control | Git | `2.x` 이상 |
+| Shell | Bash | Ubuntu 기본 Bash |
+| App Runtime | Python | `3.12-slim` base image |
+
+## 버전 관리 원칙
 
 - floating tag보다 안정적인 patch release를 우선 사용
 - 필요한 기능이 없다면 프로젝트 기간 중 새 major line은 피한다.
 - 밀접하게 연동되는 component는 호환되는 release line으로 유지한다.
 - version upgrade가 필요하면 이 파일에 기록하고 이후 검증을 다시 수행한다.
 
-## Pinned Versions
+## 고정 버전
 
 | Component | Image | Version | Reason |
 | --- | --- | --- | --- |
@@ -23,15 +39,4 @@
 | MinIO | `quay.io/minio/minio` | `RELEASE.2025-09-07T16-13-09Z` | MinIO server release tag를 고정합니다. |
 | MinIO Client | `quay.io/minio/mc` | `RELEASE.2025-08-13T08-35-41Z` | bucket 초기화를 위한 client release tag를 고정 |
 | Python base image | `python` | `3.12-slim` | `msa-demo` 서비스에 사용하는 가벼운 Python runtime |
-
-## Upgrade Rule
-
-component 계열은 한 번에 하나씩 upgrade 한다.
-
-1. `.env.example`, `docker-compose.yml`, `k3s/app-vm` manifest의 image tag를 수정
-2. 작업 PC에서 `docker compose --env-file .env.example config`를 실행
-3. 작업 PC에서 `kubectl kustomize k3s/app-vm`을 실행
-4. 깨끗한 테스트 환경에서 Monitoring VM stack과 App VM K3S stack을 시작
-5. `bash scripts/healthcheck.sh`를 실행
-6. `bash scripts/random-demo-traffic.sh`로 MSA 트래픽을 생성
-7. Grafana datasource health, dashboard, logs, metrics, traces를 확인
+| Demo App image | `msa-demo` | `local` | App VM에서 직접 빌드 후 K3S containerd로 import하는 로컬 이미지 |
