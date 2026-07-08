@@ -25,8 +25,6 @@ CART_SERVICE_URL = os.getenv("CART_SERVICE_URL", "http://cart-service:8083")
 ORDER_SERVICE_URL = os.getenv("ORDER_SERVICE_URL", "http://order-service:8084")
 PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://payment-service:8085")
 PORT = int(os.getenv("PORT", "8080"))
-INVENTORY_LOW_STOCK_CHANCE = float(os.getenv("INVENTORY_LOW_STOCK_CHANCE", "0.01"))
-PAYMENT_DECLINE_CHANCE = float(os.getenv("PAYMENT_DECLINE_CHANCE", "0.02"))
 
 PRODUCTS = [
     {"sku": "sku-1001", "name": "LGTM Hoodie", "price": 59.0},
@@ -149,13 +147,6 @@ def work():
         delay = simulated_delay(0.05, 0.35)
         logger.info("completed synthetic work in %.3fs", delay)
         return jsonify({"service": SERVICE_NAME, "delay_seconds": delay})
-
-
-@app.get("/error")
-def error():
-    with tracer.start_as_current_span("synthetic-error"):
-        logger.error("intentional demo error")
-        return jsonify({"service": SERVICE_NAME, "error": "intentional demo error"}), 500
 
 
 @app.get("/browse")
@@ -307,10 +298,6 @@ def inventory_reserve():
         span.set_attribute("demo.sku", sku)
         span.set_attribute("demo.qty", qty)
 
-        if random.random() < INVENTORY_LOW_STOCK_CHANCE:
-            logger.warning("inventory reservation low stock sku=%s qty=%s", sku, qty)
-            return jsonify({"service": SERVICE_NAME, "sku": sku, "reserved": False, "reason": "low_stock"}), 409
-
         logger.info("inventory reserved sku=%s qty=%s delay=%.3fs", sku, qty, delay)
         return jsonify({"service": SERVICE_NAME, "sku": sku, "reserved": True, "qty": qty, "delay_seconds": delay})
 
@@ -380,10 +367,6 @@ def authorize_payment():
         delay = simulated_delay(0.02, 0.3)
         span.set_attribute("demo.order_id", order_id)
         span.set_attribute("demo.amount", amount)
-
-        if random.random() < PAYMENT_DECLINE_CHANCE:
-            logger.error("payment authorization failed order_id=%s amount=%.2f", order_id, amount)
-            return jsonify({"service": SERVICE_NAME, "order_id": order_id, "status": "declined"}), 500
 
         logger.info("payment authorized order_id=%s amount=%.2f delay=%.3fs", order_id, amount, delay)
         return jsonify({"service": SERVICE_NAME, "order_id": order_id, "status": "authorized", "delay_seconds": delay})

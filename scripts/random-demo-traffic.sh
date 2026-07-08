@@ -4,7 +4,6 @@ set -euo pipefail
 target="${1:-${DEMO_APP_URL:-http://localhost:8080}}"
 max_requests="${MAX_REQUESTS_PER_RUN:-12}"
 idle_chance="${IDLE_CHANCE_PERCENT:-25}"
-error_chance="${ERROR_CHANCE_PERCENT:-0}"
 burst_chance="${BURST_CHANCE_PERCENT:-12}"
 curl_timeout="${CURL_TIMEOUT_SECONDS:-5}"
 
@@ -40,27 +39,23 @@ fi
 echo "$(date -Is) target=${target} requests=${request_count}"
 
 for _ in $(seq 1 "$request_count"); do
-  if [ "$(rand_percent)" -lt "$error_chance" ]; then
-    request "/error"
-  else
-    case $((RANDOM % 10)) in
-      0)
-        request "/"
-        ;;
-      1 | 2 | 3 | 4)
-        request "/browse"
-        ;;
-      5 | 6 | 7)
-        request "/cart/add"
-        ;;
-      8)
-        request "/checkout"
-        ;;
-      *)
-        request "/work"
-        ;;
-    esac
-  fi
+  case $((RANDOM % 10)) in
+    0)
+      request "/"
+      ;;
+    1 | 2 | 3 | 4)
+      request "/browse"
+      ;;
+    5 | 6 | 7)
+      request "/cart/add"
+      ;;
+    8)
+      request "/checkout"
+      ;;
+    *)
+      request "/work"
+      ;;
+  esac
 
   sleep "0.$((RANDOM % 9 + 1))"
 done

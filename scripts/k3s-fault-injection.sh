@@ -2,8 +2,6 @@
 set -euo pipefail
 
 namespace="${K3S_NAMESPACE:-msa-demo}"
-demo_app_url="${DEMO_APP_URL:-http://localhost:8080}"
-error_burst_count="${ERROR_BURST_COUNT:-30}"
 
 usage() {
   cat <<EOF
@@ -18,7 +16,6 @@ Actions:
   payment-down | payment-up
   node-exporter-down | node-exporter-up
   alloy-down | alloy-up
-  error-burst
   recover-all
 EOF
 }
@@ -39,15 +36,6 @@ restore_resource() {
   kubectl apply -f "${file}"
 }
 
-error_burst() {
-  echo "$(date -Is) action=error-burst target=${demo_app_url} requests=${error_burst_count}"
-  for _ in $(seq 1 "${error_burst_count}"); do
-    status="$(curl -sS -o /dev/null -m 5 -w "%{http_code}" "${demo_app_url}/error" || true)"
-    printf '%s endpoint=/error status=%s\n' "$(date -Is)" "${status}"
-    sleep 1
-  done
-}
-
 action="${1:-}"
 case "${action}" in
   api-down) scale_deployment api-service 0 ;;
@@ -66,7 +54,6 @@ case "${action}" in
   node-exporter-up) restore_resource k3s/app-vm/node-exporter.yaml ;;
   alloy-down) delete_daemonset alloy ;;
   alloy-up) restore_resource k3s/app-vm/alloy.yaml ;;
-  error-burst) error_burst ;;
   recover-all)
     for deployment in api-service catalog-service inventory-service cart-service order-service payment-service; do
       scale_deployment "${deployment}" 1
