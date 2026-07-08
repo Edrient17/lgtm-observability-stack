@@ -48,7 +48,6 @@ store_gateway:
 ruler:
   enable_api: true
   alertmanager_url: http://alertmanager:9093
-  enable_alertmanager_v2: true
   rule_path: /data/mimir/ruler
   ring:
     kvstore:

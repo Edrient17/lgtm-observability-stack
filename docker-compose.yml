@@ -87,9 +87,7 @@ services:
           sleep 2
         done
 
-        until \
-          curl -fsS -X POST -H 'Content-Type: application/yaml' --data-binary @/rules/app-alerts.yml http://mimir:9009/prometheus/config/v1/rules/app-vm-msa-alerts || \
-          curl -fsS -X PUT -H 'Content-Type: application/yaml' --data-binary @/rules/app-alerts.yml http://mimir:9009/prometheus/config/v1/rules/app-vm-msa-alerts; do
+        until curl -fsS -X POST -H 'Content-Type: application/yaml' --data-binary @/rules/app-alerts.yml http://mimir:9009/prometheus/config/v1/rules/app-vm-msa-alerts; do
           echo "waiting for mimir ruler api..."
           sleep 2
         done
