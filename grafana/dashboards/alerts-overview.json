@@ -75,7 +75,8 @@
           "editorMode": "code",
           "expr": "sum(ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighErrorRate|MsaHighLatencyP95\"}) or vector(0)",
           "legendFormat": "app-msa-firing",
-          "range": true,
+          "instant": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -148,7 +149,8 @@
           "editorMode": "code",
           "expr": "sum(ALERTS{alertstate=\"firing\"}) or vector(0)",
           "legendFormat": "backend-firing",
-          "range": true,
+          "instant": true,
+          "range": false,
           "refId": "A"
         }
       ],
