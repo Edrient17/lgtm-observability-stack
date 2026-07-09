@@ -71,5 +71,5 @@ App VM에서 확인
 - [ ] Mimir Ruler가 `configs/mimir/rules/app-alerts.yml`을 로드한다.
 - [ ] Alertmanager가 실행 중이며 Slack 알림을 전송할 수 있다.
 - [ ] backend alert 대상은 Grafana, Loki, Mimir, Tempo, Alertmanager, Monitoring VM Node Exporter다.
-- [ ] App alert 대상은 MSA service up, App VM Node Exporter, App metric missing, 장애 상황의 error rate/latency p95다.
+- [ ] App alert 대상은 MSA service up, App VM Node Exporter, App metric missing, 장애 상황의 latency p95다.
 - [ ] Mimir datasource에서 `ALERTS`와 `up{job="msa-demo"}` 쿼리로 App/MSA alert 상태를 확인할 수 있다.

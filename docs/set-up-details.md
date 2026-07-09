@@ -343,10 +343,11 @@ crontab -e
 ```
 
 ```cron
-* * * * * cd /home/ubuntu/lgtm-observability-stack && DEMO_APP_URL=http://localhost:8080 ./scripts/random-demo-traffic.sh >> /home/ubuntu/lgtm-observability-stack/logs/random-demo-traffic.log 2>&1
+* * * * * cd /home/ubuntu/lgtm-observability-stack && DEMO_APP_URL=http://localhost:8080 MAX_REQUESTS_PER_RUN=30 IDLE_CHANCE_PERCENT=0 BURST_CHANCE_PERCENT=20 ./scripts/random-demo-traffic.sh >> /home/ubuntu/lgtm-observability-stack/logs/random-demo-traffic.log 2>&1
 ```
 
 트래픽 스크립트는 정상 요청만 생성한다.
+위 cron 예시는 1분마다 실행하되 한 번 실행될 때 요청 수를 늘려 request rate와 trace/log 흐름을 더 쉽게 관찰할 수 있게 한다.
 장애 검증은 `scripts/k3s-fault-injection.sh` 또는 Monitoring VM의 Docker Compose stop/start로 실제 컴포넌트를 중단하고 복구하는 방식으로 수행한다.
 
 ### 3.10 K3S 장애 테스트
@@ -380,7 +381,7 @@ recover-all
 서비스 down 시나리오는 Deployment replica를 0으로 줄이고, 복구 시 replica를 1로 되돌린다.
 Node Exporter와 Alloy 시나리오는 DaemonSet 삭제/재적용으로 테스트한다.
 
-### 3.12 App VM 중지
+### 3.11 App VM 중지
 
 K3S App VM 리소스를 제거한다.
 

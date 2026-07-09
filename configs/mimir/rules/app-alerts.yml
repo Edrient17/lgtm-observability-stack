@@ -29,26 +29,6 @@ rules:
       summary: "App VM Node Exporter is down"
       description: "App VM Node Exporter metrics have been unavailable for more than 1 minute."
 
-  - alert: MsaHighErrorRate
-    expr: |
-      (
-        (
-          sum by (service) (rate(demo_app_requests_total{endpoint!="metrics",status=~"5.."}[5m]))
-          or
-          sum by (service) (rate(demo_app_requests_total{endpoint!="metrics"}[5m])) * 0
-        )
-        /
-        clamp_min(sum by (service) (rate(demo_app_requests_total{endpoint!="metrics"}[5m])), 0.001)
-      ) > 0.2
-      and on (service)
-      sum by (service) (rate(demo_app_requests_total{endpoint!="metrics"}[5m])) > 0.01
-    for: 1m
-    labels:
-      severity: warning
-    annotations:
-      summary: "MSA service has high error rate"
-      description: "{{ $labels.service }} has more than 20% 5xx responses for non-metrics requests."
-
   - alert: MsaHighLatencyP95
     expr: |
       histogram_quantile(

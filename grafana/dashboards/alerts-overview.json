@@ -73,7 +73,7 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum(ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighErrorRate|MsaHighLatencyP95\"}) or vector(0)",
+          "expr": "sum(ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95\"}) or vector(0)",
           "legendFormat": "app-msa-firing",
           "instant": true,
           "range": false,
@@ -259,7 +259,7 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"pending\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighErrorRate|MsaHighLatencyP95\"})",
+          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"pending\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95\"})",
           "legendFormat": "{{alertname}} {{severity}}",
           "range": true,
           "refId": "A"
@@ -293,7 +293,7 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighErrorRate|MsaHighLatencyP95\"})",
+          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95\"})",
           "legendFormat": "{{alertname}} {{severity}}",
           "range": true,
           "refId": "A"

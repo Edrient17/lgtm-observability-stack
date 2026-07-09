@@ -195,7 +195,7 @@ docker compose ps
 
 정상 기동 예시 ↓
 
-![Docker Compose](images/docker_compose_ps.png)
+![Docker Compose](images/screenshots/docker_compose_ps.png)
 
 ### 4.4 App VM 설정
 
@@ -454,10 +454,11 @@ while true; do DEMO_APP_URL=http://localhost:8080 ./scripts/random-demo-traffic.
 여러 날 관찰할 경우 cron에 등록한다.
 
 ```cron
-* * * * * cd /home/ubuntu/lgtm-observability-stack && DEMO_APP_URL=http://localhost:8080 ./scripts/random-demo-traffic.sh >> /home/ubuntu/lgtm-observability-stack/logs/random-demo-traffic.log 2>&1
+* * * * * cd /home/ubuntu/lgtm-observability-stack && DEMO_APP_URL=http://localhost:8080 MAX_REQUESTS_PER_RUN=30 IDLE_CHANCE_PERCENT=0 BURST_CHANCE_PERCENT=20 ./scripts/random-demo-traffic.sh >> /home/ubuntu/lgtm-observability-stack/logs/random-demo-traffic.log 2>&1
 ```
 
 랜덤 트래픽 스크립트는 정상 요청만 생성한다.
+위 cron 예시는 1분마다 실행하되 한 번 실행될 때 요청 수를 늘려 대시보드에서 request rate를 더 잘 관찰할 수 있게 한다.
 애플리케이션은 평상시 정상 동작을 목표로 하며, 장애 테스트는 9번 항목처럼 실제 컴포넌트를 중단하고 복구하는 방식으로 수행한다.
 
 </details>
@@ -469,27 +470,27 @@ while true; do DEMO_APP_URL=http://localhost:8080 ./scripts/random-demo-traffic.
 
 ### 9.1 App/MSA 장애 테스트
 
-`payment-service`를 중단한다.
+`catalog-service`를 중단한다.
 
 ```bash
-kubectl -n msa-demo scale deployment payment-service --replicas=0
+kubectl -n msa-demo scale deployment catalog-service --replicas=0
 ```
 
 복구한다.
 
 ```bash
-kubectl -n msa-demo scale deployment payment-service --replicas=1
+kubectl -n msa-demo scale deployment catalog-service --replicas=1
 ```
 
 기대 결과:
 
 | 관측 위치 | 기대 결과 |
 | --- | --- |
-| MSA Overview | `payment-service scrape DOWN` 표시 |
+| MSA Overview | `catalog-service scrape DOWN` 표시 |
 | Alerts Overview | `MsaServiceDown` pending 후 firing 전환 |
 | Slack | firing 및 resolved 알림 수신 |
 | Logs Overview | downstream 호출 실패 로그 확인 |
-| Traces Overview | checkout trace에서 payment-service 호출 실패 확인 |
+| Traces Overview | checkout trace에서 catalog-service 호출 실패 확인 |
 
 ### 9.2 Monitoring backend 장애 테스트
 
@@ -515,14 +516,44 @@ docker compose start loki
 
 ### 9.3 장애 테스트 증빙 이미지
 
-```text
-images/screenshots/fault-tests/payment_service_down_before.png
-images/screenshots/fault-tests/payment_service_down_firing.png
-images/screenshots/fault-tests/payment_service_down_slack.png
-images/screenshots/fault-tests/payment_service_down_logs.png
-images/screenshots/fault-tests/payment_service_down_traces.png
-images/screenshots/fault-tests/payment_service_down_resolved.png
-```
+<details>
+<summary><strong>9.3.1 catalog-service 장애 테스트</strong></summary>
+(1) catalog-service 중단 전 정상 상태
+![catalog-service 정상 상태](images/screenshots/fault-tests/catalog_service_down_before.png)
+
+(2) Alert Overview 경고 표시 및 Slack으로 MsaServiceDown firing 알림 수신
+![Slack firing 알림](images/screenshots/fault-tests/catalog_service_down_slack.png)
+
+(3) catalog-service 중단 후 MSA Overview에서 DOWN 표시
+![catalog-service DOWN](images/screenshots/fault-tests/catalog_service_down_firing.png)
+
+(4) Logs Overview에서 downstream 호출 실패 로그 확인
+![downstream 호출 실패 로그](images/screenshots/fault-tests/catalog_service_down_logs.png)
+
+(5) Traces Overview에서 checkout trace에서 catalog-service 호출 실패 확인
+![checkout trace에서 catalog-service 호출 실패](images/screenshots/fault-tests/catalog_service_down_traces.png)
+
+(6) catalog-service 복구 후 MSA Overview에서 UP 표시
+![catalog-service 복구 후 정상 상태](images/screenshots/fault-tests/catalog_service_down_resolved.png)
+</details>
+
+<details>
+<summary><strong>9.3.2 Loki 장애 테스트</strong></summary>
+(1) Loki 중단 전 정상 상태
+![Loki 정상 상태](images/screenshots/fault-tests/loki_down_before.png)
+
+(2) Loki 중단 후 Alerts Overview에서 firing 표시
+![Loki firing](images/screenshots/fault-tests/loki_down_firing.png)
+
+(3) Slack으로 LokiTargetDown firing 알림 수신
+![Slack firing 알림](images/screenshots/fault-tests/loki_down_slack.png)
+
+(4) Logs Overview에서 Loki 중단 중 로그 조회 실패 또는 지연
+![Loki 중단 중 로그 조회 실패](images/screenshots/fault-tests/loki_down_logs.png)
+
+(5) Loki 복구 후 Alerts Overview에서 resolved 표시
+![Loki resolved](images/screenshots/fault-tests/loki_down_resolved.png)
+</details>
 
 </details>
 
