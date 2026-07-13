@@ -1,6 +1,7 @@
 # LGTM Observability Stack
 
-K3S 기반 애플리케이션을 대상으로 로그, 메트릭, 트레이스를 수집하고 Grafana 대시보드와 Slack 알림으로 장애를 관측하는 2-VM 기반 LGTM Observability 프로젝트
+K3S 기반 애플리케이션을 대상으로 로그, 메트릭, 트레이스를 수집하고 Grafana 대시보드와 Slack 알림으로 장애를 관측하는 2-VM 기반 LGTM Observability 프로젝트 <br>
+[Notion Report Link](https://icy-twill-e9c.notion.site/LGTM-Observability-Stack-39874c78d6bb80f1a76cecaf06a397e1)
 
 <details>
 <summary><strong>1. 프로젝트 아키텍처</strong></summary>
@@ -320,10 +321,10 @@ curl http://localhost:8080/checkout
 | `.env.example` | Monitoring VM 환경 변수 예시 |
 | `configs/loki/loki-config.yaml` | Loki 로그 저장 및 retention 설정 |
 | `configs/mimir/mimir-config.yaml` | Mimir metric 저장소, ruler, MinIO 연동 설정 |
-| `configs/mimir/rules/app-alerts.yml` | Mimir Ruler가 평가하는 App/MSA alert rule |
+| `configs/mimir/rules/app-alerts.yml` | Mimir Ruler가 평가하는 App/MSA 및 App VM CPU/Disk alert rule |
 | `configs/tempo/tempo-config.yaml` | Tempo trace 저장 및 MinIO 연동 설정 |
 | `configs/prometheus/prometheus.yml` | Monitoring VM backend scrape 및 backend alert 설정 |
-| `configs/prometheus/rules/backend-alerts.yml` | Prometheus가 평가하는 Monitoring backend alert rule |
+| `configs/prometheus/rules/backend-alerts.yml` | Prometheus가 평가하는 Monitoring backend 및 Monitoring VM CPU/Disk alert rule |
 | `configs/alertmanager/alertmanager.yml` | Alertmanager Slack routing 설정 |
 | `grafana/provisioning/datasources/datasources.yaml` | Grafana datasource 자동 등록 설정 |
 | `grafana/provisioning/dashboards/dashboards.yaml` | Grafana dashboard 자동 등록 설정 |
@@ -357,7 +358,7 @@ curl http://localhost:8080/checkout
 | `ALLOY_OTLP_EXPORTER_ENDPOINT` | Alloy가 trace를 전달할 Monitoring VM OTel Collector 주소 |
 | `MIMIR_REMOTE_WRITE_URL` | Alloy `prometheus.remote_write`가 사용할 Mimir endpoint. |
 | `LOKI_PUSH_URL` | Alloy가 log를 push할 Loki 주소 |
-| `APP_HOST_LABEL` | App VM metric/log label |
+| `APP_HOST_LABEL` | App VM metric/log label. VM마다 `app-vm-1`, `app-vm-2`처럼 유니크하게 지정 |
 | `LOG_LEVEL` | MSA 서비스 로그 레벨 |
 
 </details>
@@ -400,9 +401,18 @@ Grafana dashboard는 `grafana/dashboards` 디렉터리의 JSON 파일로 자동 
 
 </details>
 
-### 7.2 Grafana Explore 유용한 쿼리
+### 7.2 Alert Rules
 
-#### 7.2.1 PromQL
+Alert rule은 Monitoring VM backend alert와 App/MSA alert로 나누어 관리한다.
+
+| 파일 | 평가 주체 | 주요 Alert |
+| --- | --- | --- |
+| `configs/prometheus/rules/backend-alerts.yml` | Prometheus | `LokiTargetDown`, `MimirTargetDown`, `TempoTargetDown`, `GrafanaTargetDown`, `AlertmanagerTargetDown`, `MonitoringNodeExporterDown`, `MonitoringVmHighCpuUsage`, `MonitoringVmHighDiskUsage` |
+| `configs/mimir/rules/app-alerts.yml` | Mimir Ruler | `AppMetricsMissing`, `MsaServiceDown`, `AppVmNodeExporterDown`, `MsaHighLatencyP95`, `AppVmHighCpuUsage`, `AppVmHighDiskUsage` |
+
+### 7.3 Grafana Explore 유용한 쿼리
+
+#### 7.3.1 PromQL
 
 | PromQL | 설명 |
 |---|---|
@@ -413,15 +423,15 @@ Grafana dashboard는 `grafana/dashboards` 디렉터리의 JSON 파일로 자동 
 | histogram_quantile(0.95, sum by (le, service) (rate(demo_app_request_duration_seconds_bucket[5m]))) | App VM MSA 서비스별 95th percentile latency 확인 |
 | ALERTS | 현재 firing alert 확인 |
 
-#### 7.2.2 LogQL
+#### 7.3.2 LogQL
 
 | LogQL | 설명 |
 |---|---|
-| {job="k3s-pods", host="app-vm"} | App VM K3S Pod 로그 확인 |
-| {job="k3s-pods", host="app-vm", level="ERROR"} | App VM K3S Pod ERROR 로그 확인 |
-| {job="k3s-pods", host="app-vm", service="api-service"} | api-service 로그 확인 |
+| {job="k3s-pods", host=~"app-vm-.*"} | 전체 App VM K3S Pod 로그 확인 |
+| {job="k3s-pods", host="app-vm-1", level="ERROR"} | 특정 App VM K3S Pod ERROR 로그 확인 |
+| {job="k3s-pods", host="app-vm-1", service="api-service"} | 특정 App VM의 api-service 로그 확인 |
 
-#### 7.2.3 TraceQL
+#### 7.3.3 TraceQL
 
 | TraceQL | 설명 |
 |---|---|

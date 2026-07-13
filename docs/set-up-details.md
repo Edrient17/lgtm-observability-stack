@@ -251,10 +251,11 @@ ALLOY_OTLP_EXPORTER_ENDPOINT: "<monitoring-vm-private-ip>:4317"
 MIMIR_REMOTE_WRITE_URL: "http://<monitoring-vm-private-ip>:9009/api/v1/push"
 LOKI_PUSH_URL: "http://<monitoring-vm-private-ip>:3100/loki/api/v1/push"
 LOG_LEVEL: "INFO"
-APP_HOST_LABEL: "app-vm"
+APP_HOST_LABEL: "app-vm-1"
 ```
 
-`configmap.yaml`은 VM별 private IP를 포함하므로 git에 올리지 않는다.
+`APP_HOST_LABEL`은 VM마다 `app-vm-1`, `app-vm-2`처럼 유니크하게 지정한다.
+`configmap.yaml`은 VM별 private IP와 host label을 포함하므로 git에 올리지 않는다.
 
 ### 3.5 Monitoring VM 연결 확인
 
@@ -402,7 +403,7 @@ Monitoring VM과 App VM 배포 후 Grafana에서 다음 항목을 확인한다.
 | Dashboard | 확인 항목 |
 | --- | --- |
 | MSA Overview | `up{job="msa-demo"}`, request rate, latency, HTTP status |
-| Logs Overview | `{job="k3s-pods", host="app-vm"}` 로그 수집 |
+| Logs Overview | `{job="k3s-pods", host=~"app-vm-.*"}` 로그 수집 |
 | Traces Overview | `api-service`, `cart-service`, `order-service` trace |
 | VM Metrics | Monitoring VM, App VM CPU, memory, disk, network |
 | Alerts Overview | Backend alert, App/MSA alert 상태 |
@@ -424,7 +425,7 @@ sum by (service) (rate(demo_app_requests_total[5m]))
 ```
 
 ```logql
-{job="k3s-pods", host="app-vm"}
+{job="k3s-pods", host=~"app-vm-.*"}
 ```
 
 ```traceql

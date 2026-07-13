@@ -33,7 +33,7 @@ App VM에서 확인
 ## Logs
 
 - [ ] Grafana에서 Loki datasource가 healthy 상태이다.
-- [ ] `{job="k3s-pods", host="app-vm"}` 쿼리로 App 로그가 조회된다.
+- [ ] `{job="k3s-pods", host=~"app-vm-.*"}` 쿼리로 App 로그가 조회된다.
 - [ ] 로그에 `service`, `trace_id`, `span_id` 필드가 포함된다.
 - [ ] 정상 트래픽 생성 시 App 로그가 지속적으로 수집된다.
 
@@ -70,6 +70,7 @@ App VM에서 확인
 - [ ] Prometheus가 `configs/prometheus/rules/backend-alerts.yml`을 로드한다.
 - [ ] Mimir Ruler가 `configs/mimir/rules/app-alerts.yml`을 로드한다.
 - [ ] Alertmanager가 실행 중이며 Slack 알림을 전송할 수 있다.
-- [ ] backend alert 대상은 Grafana, Loki, Mimir, Tempo, Alertmanager, Monitoring VM Node Exporter다.
-- [ ] App alert 대상은 MSA service up, App VM Node Exporter, App metric missing, 장애 상황의 latency p95다.
+- [ ] backend alert 대상은 Grafana, Loki, Mimir, Tempo, Alertmanager, Monitoring VM Node Exporter, Monitoring VM CPU/Disk 사용률이다.
+- [ ] App alert 대상은 MSA service up, App VM Node Exporter, App metric missing, 장애 상황의 latency p95, App VM CPU/Disk 사용률이다.
+- [ ] `MonitoringVmHighCpuUsage`, `MonitoringVmHighDiskUsage`, `AppVmHighCpuUsage`, `AppVmHighDiskUsage` rule이 로드되어 있다.
 - [ ] Mimir datasource에서 `ALERTS`와 `up{job="msa-demo"}` 쿼리로 App/MSA alert 상태를 확인할 수 있다.
