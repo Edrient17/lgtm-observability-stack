@@ -66,37 +66,37 @@ data:
       targets = [
         {
           "__address__" = "api-service:8080",
-          "instance" = "app-vm",
+          "instance" = sys.env("APP_HOST_LABEL"),
           "vm_role" = "app",
           "app_service" = "api-service",
         },
         {
           "__address__" = "catalog-service:8081",
-          "instance" = "app-vm",
+          "instance" = sys.env("APP_HOST_LABEL"),
           "vm_role" = "app",
           "app_service" = "catalog-service",
         },
         {
           "__address__" = "inventory-service:8082",
-          "instance" = "app-vm",
+          "instance" = sys.env("APP_HOST_LABEL"),
           "vm_role" = "app",
           "app_service" = "inventory-service",
         },
         {
           "__address__" = "cart-service:8083",
-          "instance" = "app-vm",
+          "instance" = sys.env("APP_HOST_LABEL"),
           "vm_role" = "app",
           "app_service" = "cart-service",
         },
         {
           "__address__" = "order-service:8084",
-          "instance" = "app-vm",
+          "instance" = sys.env("APP_HOST_LABEL"),
           "vm_role" = "app",
           "app_service" = "order-service",
         },
         {
           "__address__" = "payment-service:8085",
-          "instance" = "app-vm",
+          "instance" = sys.env("APP_HOST_LABEL"),
           "vm_role" = "app",
           "app_service" = "payment-service",
         },
@@ -110,7 +110,7 @@ data:
       targets = [
         {
           "__address__" = "node-exporter:9100",
-          "instance" = "app-vm",
+          "instance" = sys.env("APP_HOST_LABEL"),
           "vm_role" = "app",
         },
       ]

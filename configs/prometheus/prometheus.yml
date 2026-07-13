@@ -25,7 +25,7 @@ remote_write:
           - job
           - instance
         separator: ;
-        regex: node-exporter;app-vm
+        regex: node-exporter;app-vm.*
         action: drop
 
 scrape_configs:

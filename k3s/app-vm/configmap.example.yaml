@@ -9,5 +9,6 @@ data:
   ALLOY_OTLP_EXPORTER_ENDPOINT: "<monitoring-vm-private-ip>:4317"
   MIMIR_REMOTE_WRITE_URL: "http://<monitoring-vm-private-ip>:9009/api/v1/push"
   LOG_LEVEL: "INFO"
-  APP_HOST_LABEL: "app-vm"
+  # Use a unique value per App VM, for example app-vm-1 or app-vm-2.
+  APP_HOST_LABEL: "app-vm-1"
   LOKI_PUSH_URL: "http://<monitoring-vm-private-ip>:3100/loki/api/v1/push"
