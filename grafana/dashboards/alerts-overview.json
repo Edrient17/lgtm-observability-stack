@@ -73,7 +73,7 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum(ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95\"}) or vector(0)",
+          "expr": "sum(ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95|AppVmHighCpuUsage|AppVmHighDiskUsage\"}) or vector(0)",
           "legendFormat": "app-msa-firing",
           "instant": true,
           "range": false,
@@ -226,7 +226,7 @@
           },
           "editorMode": "code",
           "expr": "up{job=\"msa-demo\"}",
-          "legendFormat": "{{app_service}} scrape",
+          "legendFormat": "{{instance}} {{app_service}} scrape",
           "range": true,
           "refId": "A"
         }
@@ -259,7 +259,7 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"pending\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95\"})",
+          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"pending\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95|AppVmHighCpuUsage|AppVmHighDiskUsage\"})",
           "legendFormat": "{{alertname}} {{severity}}",
           "range": true,
           "refId": "A"
@@ -293,7 +293,7 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95\"})",
+          "expr": "sum by (alertname, severity) (ALERTS{alertstate=\"firing\",alertname=~\"AppMetricsMissing|MsaServiceDown|AppVmNodeExporterDown|MsaHighLatencyP95|AppVmHighCpuUsage|AppVmHighDiskUsage\"})",
           "legendFormat": "{{alertname}} {{severity}}",
           "range": true,
           "refId": "A"
@@ -370,7 +370,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "up{job=~\"grafana|loki|mimir|tempo|alertmanager|node-exporter\", instance!=\"app-vm\"}",
+          "expr": "up{job=~\"grafana|loki|mimir|tempo|alertmanager|node-exporter\", vm_role=\"monitoring\"}",
           "legendFormat": "{{job}}",
           "range": true,
           "refId": "A"

@@ -77,8 +77,8 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "up{job=\"msa-demo\",replica!=\"prometheus-1\"}",
-          "legendFormat": "{{app_service}}",
+          "expr": "up{job=\"msa-demo\",instance=~\"$instance\",replica!=\"prometheus-1\"}",
+          "legendFormat": "{{instance}} {{app_service}}",
           "range": true,
           "refId": "A"
         }
@@ -111,8 +111,8 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (endpoint) (rate(demo_app_requests_total{service=\"api-service\",endpoint=~\"browse|add_to_cart|checkout|work|error\",replica!=\"prometheus-1\"}[5m]))",
-          "legendFormat": "{{endpoint}}",
+          "expr": "sum by (instance, endpoint) (rate(demo_app_requests_total{service=\"api-service\",instance=~\"$instance\",endpoint=~\"browse|add_to_cart|checkout|work|error\",replica!=\"prometheus-1\"}[5m]))",
+          "legendFormat": "{{instance}} {{endpoint}}",
           "range": true,
           "refId": "A"
         }
@@ -145,8 +145,8 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (service) (rate(demo_app_requests_total{endpoint=\"metrics\",replica!=\"prometheus-1\"}[5m]))",
-          "legendFormat": "{{service}}",
+          "expr": "sum by (instance, service) (rate(demo_app_requests_total{instance=~\"$instance\",endpoint=\"metrics\",replica!=\"prometheus-1\"}[5m]))",
+          "legendFormat": "{{instance}} {{service}}",
           "range": true,
           "refId": "A"
         }
@@ -179,8 +179,8 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "((sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\",status=~\"5..\",replica!=\"prometheus-1\"}[5m]))) or (sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\",replica!=\"prometheus-1\"}[5m])) * 0)) / clamp_min(sum by (service) (rate(demo_app_requests_total{endpoint!=\"metrics\",replica!=\"prometheus-1\"}[5m])), 0.001)",
-          "legendFormat": "{{service}}",
+          "expr": "((sum by (instance, service) (rate(demo_app_requests_total{instance=~\"$instance\",endpoint!=\"metrics\",status=~\"5..\",replica!=\"prometheus-1\"}[5m]))) or (sum by (instance, service) (rate(demo_app_requests_total{instance=~\"$instance\",endpoint!=\"metrics\",replica!=\"prometheus-1\"}[5m])) * 0)) / clamp_min(sum by (instance, service) (rate(demo_app_requests_total{instance=~\"$instance\",endpoint!=\"metrics\",replica!=\"prometheus-1\"}[5m])), 0.001)",
+          "legendFormat": "{{instance}} {{service}}",
           "range": true,
           "refId": "A"
         }
@@ -213,8 +213,8 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(demo_app_request_duration_seconds_bucket{service=\"api-service\",endpoint=~\"browse|add_to_cart|checkout|work|error\",replica!=\"prometheus-1\"}[5m])))",
-          "legendFormat": "{{endpoint}}",
+          "expr": "histogram_quantile(0.95, sum by (le, instance, endpoint) (rate(demo_app_request_duration_seconds_bucket{service=\"api-service\",instance=~\"$instance\",endpoint=~\"browse|add_to_cart|checkout|work|error\",replica!=\"prometheus-1\"}[5m])))",
+          "legendFormat": "{{instance}} {{endpoint}}",
           "range": true,
           "refId": "A"
         }
@@ -247,8 +247,8 @@
             "uid": "mimir"
           },
           "editorMode": "code",
-          "expr": "sum by (status) (rate(demo_app_requests_total{endpoint!=\"metrics\",replica!=\"prometheus-1\"}[5m]))",
-          "legendFormat": "{{status}}",
+          "expr": "sum by (instance, status) (rate(demo_app_requests_total{instance=~\"$instance\",endpoint!=\"metrics\",replica!=\"prometheus-1\"}[5m]))",
+          "legendFormat": "{{instance}} {{status}}",
           "range": true,
           "refId": "A"
         }
@@ -265,7 +265,32 @@
     "overview"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "mimir"
+        },
+        "definition": "label_values(up{job=\"msa-demo\"}, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "App VM",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": "label_values(up{job=\"msa-demo\"}, instance)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
