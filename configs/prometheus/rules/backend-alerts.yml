@@ -60,3 +60,45 @@ groups:
         annotations:
           summary: "Alertmanager target is down"
           description: "Prometheus cannot scrape Alertmanager metrics for more than 2 minutes."
+
+      - alert: MonitoringVmHighCpuUsage
+        expr: |
+          100 * (
+            1 - avg by (instance, vm_role) (
+              rate(node_cpu_seconds_total{job="node-exporter", instance="monitoring-vm", mode="idle"}[5m])
+            )
+          ) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: node-exporter
+        annotations:
+          summary: "Monitoring VM CPU usage is high"
+          description: "Monitoring VM CPU usage has been above 80% for more than 5 minutes."
+
+      - alert: MonitoringVmHighDiskUsage
+        expr: |
+          100 * (
+            1 - (
+              node_filesystem_avail_bytes{
+                job="node-exporter",
+                instance="monitoring-vm",
+                fstype!~"tmpfs|devtmpfs|overlay|squashfs|proc|sysfs|devpts|cgroup2?|nsfs|ramfs|autofs|mqueue|tracefs|securityfs|fuse.*",
+                mountpoint!~"/run($|/.*)|/var/lib/docker($|/.*)"
+              }
+              /
+              node_filesystem_size_bytes{
+                job="node-exporter",
+                instance="monitoring-vm",
+                fstype!~"tmpfs|devtmpfs|overlay|squashfs|proc|sysfs|devpts|cgroup2?|nsfs|ramfs|autofs|mqueue|tracefs|securityfs|fuse.*",
+                mountpoint!~"/run($|/.*)|/var/lib/docker($|/.*)"
+              }
+            )
+          ) > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: node-exporter
+        annotations:
+          summary: "Monitoring VM disk usage is high"
+          description: "Monitoring VM disk usage on {{ $labels.mountpoint }} has been above 85% for more than 5 minutes."

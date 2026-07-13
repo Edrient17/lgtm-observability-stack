@@ -20,24 +20,66 @@ rules:
       description: "{{ $labels.app_service }} on {{ $labels.instance }} has been unavailable for more than 1 minute."
 
   - alert: AppVmNodeExporterDown
-    expr: up{job="node-exporter", instance="app-vm"} == 0
+    expr: up{job="node-exporter", vm_role="app"} == 0
     for: 1m
     labels:
       severity: warning
       service: node-exporter
     annotations:
       summary: "App VM Node Exporter is down"
-      description: "App VM Node Exporter metrics have been unavailable for more than 1 minute."
+      description: "App VM Node Exporter metrics on {{ $labels.instance }} have been unavailable for more than 1 minute."
 
   - alert: MsaHighLatencyP95
     expr: |
       histogram_quantile(
         0.95,
-        sum by (le, service) (rate(demo_app_request_duration_seconds_bucket{endpoint!="metrics"}[5m]))
+        sum by (le, instance, service) (rate(demo_app_request_duration_seconds_bucket{endpoint!="metrics"}[5m]))
       ) > 1
     for: 2m
     labels:
       severity: warning
     annotations:
       summary: "MSA service has high p95 latency"
-      description: "{{ $labels.service }} p95 latency is above 1 second for non-metrics requests."
+      description: "{{ $labels.service }} on {{ $labels.instance }} p95 latency is above 1 second for non-metrics requests."
+
+  - alert: AppVmHighCpuUsage
+    expr: |
+      100 * (
+        1 - avg by (instance, vm_role) (
+          rate(node_cpu_seconds_total{job="node-exporter", vm_role="app", mode="idle"}[5m])
+        )
+      ) > 80
+    for: 5m
+    labels:
+      severity: warning
+      service: node-exporter
+    annotations:
+      summary: "App VM CPU usage is high"
+      description: "App VM CPU usage on {{ $labels.instance }} has been above 80% for more than 5 minutes."
+
+  - alert: AppVmHighDiskUsage
+    expr: |
+      100 * (
+        1 - (
+          node_filesystem_avail_bytes{
+            job="node-exporter",
+            vm_role="app",
+            fstype!~"tmpfs|devtmpfs|overlay|squashfs|proc|sysfs|devpts|cgroup2?|nsfs|ramfs|autofs|mqueue|tracefs|securityfs|fuse.*",
+            mountpoint!~"/run($|/.*)|/var/lib/kubelet($|/.*)|/var/lib/docker($|/.*)"
+          }
+          /
+          node_filesystem_size_bytes{
+            job="node-exporter",
+            vm_role="app",
+            fstype!~"tmpfs|devtmpfs|overlay|squashfs|proc|sysfs|devpts|cgroup2?|nsfs|ramfs|autofs|mqueue|tracefs|securityfs|fuse.*",
+            mountpoint!~"/run($|/.*)|/var/lib/kubelet($|/.*)|/var/lib/docker($|/.*)"
+          }
+        )
+      ) > 85
+    for: 5m
+    labels:
+      severity: warning
+      service: node-exporter
+    annotations:
+      summary: "App VM disk usage is high"
+      description: "App VM disk usage on {{ $labels.mountpoint }} has been above 85% for more than 5 minutes."
