@@ -217,9 +217,9 @@ App VM의 service port는 K3S 내부 통신과 VM 내부 검증에 사용하며 
 App VM outbound는 Monitoring VM private IP의 `3100/tcp`, `4317/tcp`, `9009/tcp`에 접근 가능해야 한다.
 특히 Mimir metric 전송은 `http://<monitoring-vm-private-ip>:9009/api/v1/push` endpoint를 사용하는 Prometheus remote_write 방식이다.
 
-### 3.3 `user-data.yaml`을 이용한 자동 기동
+### 3.3 `user-data.example.yaml`을 이용한 자동 기동
 
-App VM을 추가로 생성하거나 auto scaling 시연을 할 때는 `docs/user-data.yaml`을 VM 생성 화면의 user-data 또는 cloud-init 입력란에 넣어 자동 기동할 수 있다.
+App VM을 추가로 생성하거나 auto scaling 시연을 할 때는 `docs/user-data.example.yaml`을 기반으로 `docs/user-data.yaml`을 만들어 VM 생성 화면의 user-data 또는 cloud-init 입력란에 넣어 자동 기동할 수 있다.
 이 방식은 VM 부팅 후 bootstrap script를 systemd service로 실행하며, 실패 시 재시도한다.
 
 자동 기동에서 수행하는 작업은 다음과 같다.
@@ -236,7 +236,13 @@ Alloy, Node Exporter, MSA rollout 대기
 랜덤 트래픽 cron 등록 및 초기 트래픽 생성
 ```
 
-사용 전 `docs/user-data.yaml`에서 아래 값을 환경에 맞게 수정한다.
+사용 전 예시 파일을 복사한다.
+
+```bash
+cp docs/user-data.example.yaml docs/user-data.yaml
+```
+
+그 다음 `docs/user-data.yaml`에서 아래 값을 환경에 맞게 수정한다.
 
 ```bash
 REPO_URL="<repository-url>"
