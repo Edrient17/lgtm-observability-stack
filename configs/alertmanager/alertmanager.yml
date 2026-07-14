@@ -5,6 +5,7 @@ route:
   receiver: slack-alerts
   group_by:
     - alertname
+    - instance
     - app_service
     - service
     - severity

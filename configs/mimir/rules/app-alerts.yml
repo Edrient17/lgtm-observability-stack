@@ -11,7 +11,7 @@ rules:
       description: "Mimir cannot see MSA metrics from Alloy. Check Alloy metric scraping, Mimir remote_write, and App VM connectivity."
 
   - alert: MsaServiceDown
-    expr: up{job="msa-demo"} == 0
+    expr: up{job="msa-demo", vm_role="app"} == 0
     for: 1m
     labels:
       severity: critical
