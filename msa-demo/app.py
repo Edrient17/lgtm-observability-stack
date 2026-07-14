@@ -105,7 +105,7 @@ configure_logging()
 configure_tracing()
 
 app = Flask(__name__)
-FlaskInstrumentor().instrument_app(app)
+FlaskInstrumentor().instrument_app(app, excluded_urls="/metrics")
 RequestsInstrumentor().instrument()
 tracer = trace.get_tracer(__name__)
 logger = logging.getLogger(SERVICE_NAME)

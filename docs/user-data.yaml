@@ -1,0 +1,94 @@
+#cloud-config
+package_update: true
+package_upgrade: false
+
+packages:
+  - git
+  - curl
+  - ca-certificates
+  - docker.io
+
+write_files:
+  - path: /usr/local/bin/lgtm-app-bootstrap.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euxo pipefail
+
+      # Replace these values before using this file as VM user-data.
+      REPO_URL="<repository-url>"
+      APP_DIR="/home/ubuntu/lgtm-observability-stack"
+      MONITORING_VM_IP="<monitoring-vm-private-ip>"
+      APP_HOST_LABEL="$(hostname -s)"
+
+      systemctl enable --now docker
+      until docker info >/dev/null 2>&1; do sleep 3; done
+
+      if ! command -v k3s >/dev/null 2>&1; then
+        curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik --disable servicelb" sh -
+      fi
+
+      chmod 644 /etc/rancher/k3s/k3s.yaml
+      until kubectl get nodes >/dev/null 2>&1; do sleep 5; done
+
+      if [ ! -d "$APP_DIR/.git" ]; then
+        git clone "$REPO_URL" "$APP_DIR"
+      else
+        git -C "$APP_DIR" pull
+      fi
+      chown -R ubuntu:ubuntu "$APP_DIR"
+
+      cat > "$APP_DIR/k3s/app-vm/configmap.yaml" <<EOF
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: msa-demo-config
+        namespace: msa-demo
+      data:
+        OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy:4317"
+        OTEL_EXPORTER_OTLP_INSECURE: "true"
+        ALLOY_OTLP_EXPORTER_ENDPOINT: "${MONITORING_VM_IP}:4317"
+        MIMIR_REMOTE_WRITE_URL: "http://${MONITORING_VM_IP}:9009/api/v1/push"
+        LOG_LEVEL: "INFO"
+        APP_HOST_LABEL: "${APP_HOST_LABEL}"
+        LOKI_PUSH_URL: "http://${MONITORING_VM_IP}:3100/loki/api/v1/push"
+      EOF
+
+      cd "$APP_DIR"
+      bash ./scripts/k3s-load-demo-image.sh
+      kubectl apply -k ./k3s/app-vm
+
+      for d in api-service catalog-service inventory-service cart-service order-service payment-service; do
+        kubectl -n msa-demo rollout status deployment/$d --timeout=300s
+      done
+      kubectl -n msa-demo rollout status daemonset/alloy --timeout=180s
+      kubectl -n msa-demo rollout status daemonset/node-exporter --timeout=180s
+
+      mkdir -p "$APP_DIR/logs"
+      (crontab -l 2>/dev/null | grep -v random-demo-traffic.sh || true; echo "* * * * * cd $APP_DIR && DEMO_APP_URL=http://localhost:8080 MAX_REQUESTS_PER_RUN=30 IDLE_CHANCE_PERCENT=0 BURST_CHANCE_PERCENT=20 bash ./scripts/random-demo-traffic.sh >> $APP_DIR/logs/random-demo-traffic.log 2>&1") | crontab -
+
+      for i in $(seq 1 5); do
+        DEMO_APP_URL=http://localhost:8080 MAX_REQUESTS_PER_RUN=20 IDLE_CHANCE_PERCENT=0 bash ./scripts/random-demo-traffic.sh || true
+        sleep 5
+      done
+
+  - path: /etc/systemd/system/lgtm-app-bootstrap.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Bootstrap LGTM App VM
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/lgtm-app-bootstrap.sh
+      Restart=on-failure
+      RestartSec=20
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  - systemctl daemon-reload
+  - systemctl enable --now lgtm-app-bootstrap.service

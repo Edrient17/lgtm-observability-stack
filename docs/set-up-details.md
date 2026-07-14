@@ -217,7 +217,58 @@ App VM의 service port는 K3S 내부 통신과 VM 내부 검증에 사용하며 
 App VM outbound는 Monitoring VM private IP의 `3100/tcp`, `4317/tcp`, `9009/tcp`에 접근 가능해야 한다.
 특히 Mimir metric 전송은 `http://<monitoring-vm-private-ip>:9009/api/v1/push` endpoint를 사용하는 Prometheus remote_write 방식이다.
 
-### 3.3 K3S 설치
+### 3.3 `user-data.yaml`을 이용한 자동 기동
+
+App VM을 추가로 생성하거나 auto scaling 시연을 할 때는 `docs/user-data.yaml`을 VM 생성 화면의 user-data 또는 cloud-init 입력란에 넣어 자동 기동할 수 있다.
+이 방식은 VM 부팅 후 bootstrap script를 systemd service로 실행하며, 실패 시 재시도한다.
+
+자동 기동에서 수행하는 작업은 다음과 같다.
+
+```text
+필수 패키지 설치
+Docker 기동
+K3S 설치
+Repository clone 또는 pull
+App VM ConfigMap 생성
+Demo image build/import
+K3S manifest apply
+Alloy, Node Exporter, MSA rollout 대기
+랜덤 트래픽 cron 등록 및 초기 트래픽 생성
+```
+
+사용 전 `docs/user-data.yaml`에서 아래 값을 환경에 맞게 수정한다.
+
+```bash
+REPO_URL="<repository-url>"
+MONITORING_VM_IP="<monitoring-vm-private-ip>"
+```
+
+`APP_HOST_LABEL`은 기본적으로 VM hostname을 사용한다.
+따라서 VM 이름을 `app-vm-1`, `app-vm-2`, `app-vm-3`처럼 유니크하게 생성하면 Grafana에서 VM별로 분리 조회할 수 있다.
+
+자동 기동 완료 후 Grafana에서 다음 쿼리로 신규 App VM 수집 여부를 확인할 수 있다.
+
+```promql
+up{job="msa-demo", instance="<app-vm-hostname>"}
+```
+
+```logql
+{job="k3s-pods", host="<app-vm-hostname>"}
+```
+
+문제가 발생하면 App VM에서 아래 명령으로 bootstrap 상태를 확인한다.
+
+```bash
+cloud-init status --long
+sudo journalctl -u lgtm-app-bootstrap --no-pager -n 100
+kubectl -n msa-demo get pods,svc,daemonset
+```
+
+### 3.4 수동 기동 방법
+
+자동 기동을 사용하지 않거나 단계별로 검증하면서 배포할 경우에는 아래 수동 절차를 따른다.
+
+#### 3.4.1 K3S 설치
 
 App VM에서 실행한다.
 
@@ -234,7 +285,7 @@ sudo systemctl status k3s
 sudo journalctl -u k3s --no-pager -n 100
 ```
 
-### 3.4 ConfigMap 생성
+#### 3.4.2 ConfigMap 생성
 
 Repository clone 이후 App VM에서 ConfigMap 예시 파일을 로컬 전용 파일로 복사한다.
 
@@ -257,7 +308,7 @@ APP_HOST_LABEL: "app-vm-1"
 `APP_HOST_LABEL`은 VM마다 `app-vm-1`, `app-vm-2`처럼 유니크하게 지정한다.
 `configmap.yaml`은 VM별 private IP와 host label을 포함하므로 git에 올리지 않는다.
 
-### 3.5 Monitoring VM 연결 확인
+#### 3.4.3 Monitoring VM 연결 확인
 
 App VM에서 Monitoring VM endpoint에 접근 가능한지 확인한다.
 
@@ -269,7 +320,7 @@ curl http://<monitoring-vm-private-ip>:4318/
 
 `4318`은 HTTP receiver 확인용이므로 `404 page not found` 같은 HTTP 응답이 오면 네트워크 연결은 된 것이다.
 
-### 3.6 Demo app 이미지 빌드 및 import
+#### 3.4.4 Demo app 이미지 빌드 및 import
 
 ```bash
 chmod +x ./scripts/k3s-load-demo-image.sh
@@ -283,7 +334,7 @@ SSH 재접속 후 다시 실행하거나 임시로 `sudo`를 사용한다.
 sudo ./scripts/k3s-load-demo-image.sh
 ```
 
-### 3.7 K3S 리소스 배포
+#### 3.4.5 K3S 리소스 배포
 
 ```bash
 kubectl apply -k ./k3s/app-vm
@@ -303,7 +354,7 @@ pod/alloy-...                1/1 Running
 pod/node-exporter-...        1/1 Running
 ```
 
-### 3.8 App VM 기능 확인
+#### 3.4.6 App VM 기능 확인
 
 App VM에서 demo app endpoint를 확인한다.
 
@@ -322,7 +373,7 @@ kubectl -n msa-demo logs daemonset/alloy --tail=100
 curl http://localhost:9100/metrics
 ```
 
-### 3.9 정상 트래픽 생성
+#### 3.4.7 정상 트래픽 생성
 
 정상 트래픽을 수동 생성한다.
 
@@ -351,7 +402,7 @@ crontab -e
 위 cron 예시는 1분마다 실행하되 한 번 실행될 때 요청 수를 늘려 request rate와 trace/log 흐름을 더 쉽게 관찰할 수 있게 한다.
 장애 검증은 `scripts/k3s-fault-injection.sh` 또는 Monitoring VM의 Docker Compose stop/start로 실제 컴포넌트를 중단하고 복구하는 방식으로 수행한다.
 
-### 3.10 K3S 장애 테스트
+#### 3.4.8 K3S 장애 테스트
 
 예를 들어 `payment-service`를 중단한다.
 
@@ -382,7 +433,7 @@ recover-all
 서비스 down 시나리오는 Deployment replica를 0으로 줄이고, 복구 시 replica를 1로 되돌린다.
 Node Exporter와 Alloy 시나리오는 DaemonSet 삭제/재적용으로 테스트한다.
 
-### 3.11 App VM 중지
+### 3.5 App VM 중지
 
 K3S App VM 리소스를 제거한다.
 
