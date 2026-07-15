@@ -104,7 +104,7 @@ make k3s-app-status  # App VM K3S 리소스 상태 확인
 ├── k3s/app-vm/    # App VM K3S manifests
 ├── msa-demo/      # Python Flask 기반 MSA 데모 애플리케이션
 ├── scripts/       # healthcheck, traffic, image load, fault injection 스크립트
-├── docs/          # 설정 상세, 검증, 버전 정책 참고 문서
+├── docs/          # 설정 상세, 검증 참고 문서
 ├── wiki/          # GitHub Wiki export 문서
 └── images/        # 아키텍처 및 검증 스크린샷
 ```

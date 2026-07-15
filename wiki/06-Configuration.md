@@ -22,7 +22,6 @@
 | `k3s/app-vm/node-exporter.yaml` | App VM Node Exporter DaemonSet 정의 |
 | `msa-demo/app.py` | MSA 데모 애플리케이션 코드 |
 | `docs/set-up-details.md` | VM 초기 설정, Monitoring VM, App VM 상세 설치 안내 |
-| `docs/version-policy.md` | 플랫폼, 런타임, 이미지 버전 정책 |
 
 ## 6.2 주요 환경 변수
 
