@@ -1,6 +1,6 @@
 # 1. 프로젝트 아키텍처
 
-![Architecture Diagram](https://raw.githubusercontent.com/Edrient17/lgtm-observability-stack/main/images/architecture_diagram.jpg)
+![Architecture Diagram](https://raw.githubusercontent.com/Edrient17/lgtm-observability-stack/main/images/architecture_diagram.svg)
 
 Docker Compose로 구성한 Monitoring VM 서비스는 다음과 같습니다.
 
@@ -12,7 +12,6 @@ Docker Compose로 구성한 Monitoring VM 서비스는 다음과 같습니다.
 | `tempo` | `tempo` | MSA trace 저장 및 TraceQL 조회 |
 | `prometheus` | `prometheus` | Monitoring VM backend 메트릭 scrape 및 backend alert rule 평가 |
 | `alertmanager` | `alertmanager` | Prometheus와 Mimir Ruler alert를 수신하여 Slack으로 전송 |
-| `otel-collector` | `otel-collector` | App VM Alloy가 보낸 trace를 Tempo로 전달 |
 | `minio` | `minio` | Mimir, Tempo block 저장용 S3 호환 object storage |
 | `minio-init` | `minio-init` | Mimir, Tempo용 MinIO bucket 초기 생성 |
 | `mimir-rules-init` | `mimir-rules-init` | `configs/mimir/rules/app-alerts.yml`을 Mimir Ruler API에 등록 |
@@ -30,7 +29,7 @@ K3S로 구성한 App VM 리소스는 다음과 같습니다.
 | `payment-service` | Deployment, Service | 결제 승인 처리 |
 | `alloy` | DaemonSet, Service | K3S Pod 로그 수집, MSA/Node Exporter 메트릭 scrape, OTLP trace 수신 및 Monitoring VM으로 전달 |
 | `node-exporter` | DaemonSet, Service | App VM 시스템 메트릭 노출 |
-| `msa-demo-config` | ConfigMap | Monitoring VM private IP, Loki/Mimir/OTel Collector endpoint, log/label 설정 |
+| `msa-demo-config` | ConfigMap | Monitoring VM private IP, Loki/Mimir/Tempo endpoint, log/label 설정 |
 
 ## 1.1 Telemetry Flow
 
@@ -39,7 +38,7 @@ K3S로 구성한 App VM 리소스는 다음과 같습니다.
 | Logs | K3S Pod stdout/stderr -> `/var/log/containers/*.log` -> Alloy -> Loki -> Grafana |
 | Metrics (App VM) | App VM의 Alloy가 App `/metrics`와 Node Exporter를 scrape하고, Prometheus remote_write 방식으로 Mimir `/api/v1/push`에 전송 -> Grafana |
 | Metrics (Monitoring VM) | Prometheus가 Grafana, Loki, Mimir, Tempo, Alertmanager, Monitoring VM Node Exporter `/metrics`를 scrape -> Mimir remote_write -> Grafana |
-| Traces | App 서비스 -> OTLP gRPC -> Alloy -> OTel Collector -> Tempo -> Grafana |
+| Traces | App 서비스 -> OTLP gRPC -> Alloy -> Tempo -> Grafana |
 | Backend Alerts | Prometheus -> Alertmanager -> Slack |
 | App/MSA Alerts | Alloy -> Mimir -> Mimir Ruler -> Alertmanager -> Slack |
 | Storage | Mimir, Tempo -> MinIO object storage |

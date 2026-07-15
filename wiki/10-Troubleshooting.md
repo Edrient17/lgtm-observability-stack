@@ -8,7 +8,7 @@ Symptom:
 
 Root cause:
 
-- App VM 트래픽이 생성되지 않았거나, Alloy가 Mimir/Loki/OTel Collector로 데이터를 보내지 못하고 있을 수 있습니다.
+- App VM 트래픽이 생성되지 않았거나, Alloy가 Mimir/Loki/Tempo로 데이터를 보내지 못하고 있을 수 있습니다.
 
 Fix:
 

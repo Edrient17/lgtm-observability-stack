@@ -48,7 +48,6 @@
 | Prometheus | `prom/prometheus` | `v3.5.4` | 안정적인 Prometheus 3 release branch |
 | Alertmanager | `prom/alertmanager` | `v0.28.1` | Monitoring backend alert를 Slack으로 전달하기 위한 안정적인 Alertmanager release |
 | Node Exporter | `prom/node-exporter` | `v1.11.1` | 안정적인 node-exporter release |
-| OpenTelemetry Collector Contrib | `otel/opentelemetry-collector-contrib` | `0.155.0` | 안정적인 collector release tag |
 | MinIO | `quay.io/minio/minio` | `RELEASE.2025-09-07T16-13-09Z` | MinIO server release tag를 고정 |
 | MinIO Client | `quay.io/minio/mc` | `RELEASE.2025-08-13T08-35-41Z` | bucket 초기화를 위한 client release tag를 고정 |
 | Python base image | `python` | `3.12-slim` | `msa-demo` 서비스에 사용하는 가벼운 Python runtime |

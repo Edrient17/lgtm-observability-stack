@@ -135,11 +135,11 @@ data:
 
     otelcol.processor.batch "app" {
       output {
-        traces = [otelcol.exporter.otlp.monitoring.input]
+        traces = [otelcol.exporter.otlp.tempo.input]
       }
     }
 
-    otelcol.exporter.otlp "monitoring" {
+    otelcol.exporter.otlp "tempo" {
       client {
         endpoint = sys.env("ALLOY_OTLP_EXPORTER_ENDPOINT")
         tls {

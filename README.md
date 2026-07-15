@@ -2,7 +2,7 @@
 
 K3S 기반 MSA 데모 애플리케이션의 로그, 메트릭, 트레이스를 수집하고 Grafana 대시보드와 Slack 알림으로 장애를 관측하는 2-VM 기반 Observability 프로젝트입니다.
 
-![Architecture Diagram](images/architecture_diagram.jpg)
+![Architecture Diagram](images/architecture_diagram.svg)
 
 ## 문서
 
@@ -16,7 +16,7 @@ GitHub Wiki에 게시하려면 [wiki/Publish-Guide.md](wiki/Publish-Guide.md)를
 
 이 프로젝트는 Monitoring VM과 App VM을 분리해 구성합니다.
 
-- Monitoring VM: Grafana, Loki, Mimir, Tempo, Prometheus, Alertmanager, OTel Collector, MinIO, Node Exporter를 Docker Compose로 실행합니다.
+- Monitoring VM: Grafana, Loki, Mimir, Tempo, Prometheus, Alertmanager, MinIO, Node Exporter를 Docker Compose로 실행합니다.
 - App VM: K3S 위에서 MSA demo services, Alloy, Node Exporter를 실행하고 telemetry를 Monitoring VM으로 전송합니다.
 
 ## Telemetry Flow
@@ -26,7 +26,7 @@ GitHub Wiki에 게시하려면 [wiki/Publish-Guide.md](wiki/Publish-Guide.md)를
 | Logs | K3S Pod stdout/stderr -> Alloy -> Loki -> Grafana |
 | Metrics (App VM) | Alloy scrape -> Mimir remote_write -> Grafana |
 | Metrics (Monitoring VM) | Prometheus scrape -> Mimir remote_write -> Grafana |
-| Traces | App 서비스 -> Alloy -> OTel Collector -> Tempo -> Grafana |
+| Traces | App 서비스 -> Alloy -> Tempo -> Grafana |
 | Alerts | Prometheus/Mimir Ruler -> Alertmanager -> Slack |
 | Storage | Mimir, Tempo -> MinIO |
 
@@ -99,7 +99,7 @@ make k3s-app-status  # App VM K3S 리소스 상태 확인
 
 ```text
 .
-├── configs/       # Loki, Mimir, Tempo, Prometheus, Alertmanager, OTel Collector 설정
+├── configs/       # Loki, Mimir, Tempo, Prometheus, Alertmanager 설정
 ├── grafana/       # Datasource, dashboard provisioning
 ├── k3s/app-vm/    # App VM K3S manifests
 ├── msa-demo/      # Python Flask 기반 MSA 데모 애플리케이션

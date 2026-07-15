@@ -41,7 +41,7 @@
 | Key | 의미 |
 | --- | --- |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | MSA 서비스가 trace를 보낼 Alloy OTLP endpoint |
-| `ALLOY_OTLP_EXPORTER_ENDPOINT` | Alloy가 trace를 전달할 Monitoring VM OTel Collector 주소 |
+| `ALLOY_OTLP_EXPORTER_ENDPOINT` | Alloy가 trace를 전달할 Monitoring VM Tempo OTLP gRPC 주소 |
 | `MIMIR_REMOTE_WRITE_URL` | Alloy `prometheus.remote_write`가 사용할 Mimir endpoint |
 | `LOKI_PUSH_URL` | Alloy가 log를 push할 Loki 주소 |
 | `APP_HOST_LABEL` | App VM metric/log label. VM마다 `app-vm-1`, `app-vm-2`처럼 유니크하게 지정 |

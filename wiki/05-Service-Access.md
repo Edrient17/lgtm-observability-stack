@@ -33,7 +33,7 @@ App VM에서 확인:
 ```bash
 curl http://<monitoring-vm-private-ip>:3100/ready
 curl http://<monitoring-vm-private-ip>:9009/ready
-curl http://<monitoring-vm-private-ip>:4318/
+timeout 3 bash -c '</dev/tcp/<monitoring-vm-private-ip>/4317'
 curl http://localhost:8080/browse
 curl http://localhost:8080/cart/add
 curl http://localhost:8080/checkout

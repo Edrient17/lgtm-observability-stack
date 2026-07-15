@@ -4,7 +4,7 @@
 
 - [ ] `.env`를 `.env.example`에서 생성
 - [ ] `docker compose up -d`가 정상 완료된다.
-- [ ] `docker compose ps`에서 Grafana, Loki, Mimir, Tempo, Prometheus, Alertmanager, OTel Collector, MinIO, Node Exporter가 실행 중이다.
+- [ ] `docker compose ps`에서 Grafana, Loki, Mimir, Tempo, Prometheus, Alertmanager, MinIO, Node Exporter가 실행 중이다.
 - [ ] Grafana가 `http://<monitoring-vm-public-ip>:3000`에서 접속된다.
 
 ## App VM
@@ -27,8 +27,8 @@ App VM에서 확인
 
 - [ ] `curl http://<monitoring-vm-private-ip>:3100/ready`가 최종적으로 `ready`를 반환한다.
 - [ ] `curl http://<monitoring-vm-private-ip>:9009/ready`가 성공한다.
-- [ ] `curl http://<monitoring-vm-private-ip>:4318/`가 `404 page not found` 같은 HTTP 응답을 반환한다.
-- [ ] `kubectl -n msa-demo logs daemonset/alloy --tail=100`에서 Loki, Mimir, OTel Collector 전송 오류가 없다.
+- [ ] `timeout 3 bash -c '</dev/tcp/<monitoring-vm-private-ip>/4317'`가 성공한다.
+- [ ] `kubectl -n msa-demo logs daemonset/alloy --tail=100`에서 Loki, Mimir, Tempo 전송 오류가 없다.
 
 ## Logs
 

@@ -12,7 +12,7 @@ Monitoring VM inbound:
 | `22/tcp` | 관리자 IP | SSH 접속, 개발 완료 후 제거 |
 | `3000/tcp` | 관리자 IP | Grafana Web UI |
 | `3100/tcp` | App VM private IP | Alloy -> Loki 로그 전송 |
-| `4317/tcp` | App VM private IP | Alloy -> OTel Collector OTLP gRPC trace 전송 |
+| `4317/tcp` | App VM private IP | Alloy -> Tempo OTLP gRPC trace 전송 |
 | `9009/tcp` | App VM private IP | Alloy `prometheus.remote_write` -> Mimir `/api/v1/push` |
 
 App VM inbound:
@@ -28,8 +28,7 @@ App VM inbound:
 | Monitoring | Grafana | `3000` | Web UI | 관리자 IP에 공개 |
 | Monitoring | Loki | `3100` | 로그 수신 API | App VM private IP만 허용 |
 | Monitoring | Mimir | `9009` | metric remote_write `/api/v1/push` 및 query API | App VM private IP만 허용 |
-| Monitoring | Tempo | `3200` | trace query API | 외부 공개 X |
-| Monitoring | OTel Collector | `4317`, `4318` | trace 수신 | App VM private IP만 허용 |
+| Monitoring | Tempo | `3200`, `4317` | trace query API 및 OTLP gRPC trace 수신 | `4317`은 App VM private IP만 허용 |
 | Monitoring | Prometheus | `9090` | backend metric scrape 및 alert rule 평가 | 외부 공개 X |
 | Monitoring | Alertmanager | `9093` | Slack alert routing | 외부 공개 X |
 | Monitoring | MinIO | `9000`, `9001` | object storage | 외부 공개 X |

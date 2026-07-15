@@ -5,7 +5,7 @@ K3S 기반 애플리케이션을 대상으로 로그, 메트릭, 트레이스를
 - Repository: [Edrient17/lgtm-observability-stack](https://github.com/Edrient17/lgtm-observability-stack)
 - Notion Report: [LGTM Observability Stack](https://icy-twill-e9c.notion.site/LGTM-Observability-Stack-39874c78d6bb80f1a76cecaf06a397e1)
 
-![Architecture Diagram](https://raw.githubusercontent.com/Edrient17/lgtm-observability-stack/main/images/architecture_diagram.jpg)
+![Architecture Diagram](https://raw.githubusercontent.com/Edrient17/lgtm-observability-stack/main/images/architecture_diagram.svg)
 
 ## Wiki 목차
 

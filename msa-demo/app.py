@@ -18,7 +18,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 SERVICE_NAME = os.getenv("OTEL_SERVICE_NAME", "api-service")
 SERVICE_ROLE = os.getenv("SERVICE_ROLE", "api")
-OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4317")
+OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://alloy:4317")
 CATALOG_SERVICE_URL = os.getenv("CATALOG_SERVICE_URL", "http://catalog-service:8081")
 INVENTORY_SERVICE_URL = os.getenv("INVENTORY_SERVICE_URL", "http://inventory-service:8082")
 CART_SERVICE_URL = os.getenv("CART_SERVICE_URL", "http://cart-service:8083")

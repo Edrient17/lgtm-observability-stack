@@ -75,7 +75,6 @@ Tempo
 Prometheus
 Alertmanager
 MinIO
-OpenTelemetry Collector
 Monitoring VM Node Exporter
 ```
 
@@ -88,7 +87,7 @@ Monitoring VM inbound는 아래 포트만 허용한다.
 | `22/tcp` | 관리자 IP | SSH 접속 |
 | `3000/tcp` | 관리자 IP | Grafana Web UI |
 | `3100/tcp` | App VM private IP | Alloy -> Loki 로그 전송 |
-| `4317/tcp` | App VM private IP | Alloy -> OTel Collector OTLP gRPC trace 전송 |
+| `4317/tcp` | App VM private IP | Alloy -> Tempo OTLP gRPC trace 전송 |
 | `9009/tcp` | App VM private IP | Alloy `prometheus.remote_write` -> Mimir `/api/v1/push` |
 
 Prometheus `9090`, Alertmanager `9093`, Tempo `3200`, MinIO `9000/9001`은 외부에 공개하지 않는다.
@@ -128,7 +127,6 @@ mimir
 tempo
 prometheus
 alertmanager
-otel-collector
 minio
 node-exporter-monitoring
 ```
@@ -202,7 +200,7 @@ Telemetry 흐름은 다음과 같다.
 ```text
 logs    K3S pod log files -> Alloy -> Loki
 metrics App services /metrics, Node Exporter -> Alloy prometheus.scrape -> Alloy prometheus.remote_write -> Mimir /api/v1/push
-traces  App services OTLP gRPC -> Alloy -> OTel Collector -> Tempo
+traces  App services OTLP gRPC -> Alloy -> Tempo
 ```
 
 ### 3.2 Security Group
@@ -321,10 +319,10 @@ App VM에서 Monitoring VM endpoint에 접근 가능한지 확인한다.
 ```bash
 curl http://<monitoring-vm-private-ip>:3100/ready
 curl http://<monitoring-vm-private-ip>:9009/ready
-curl http://<monitoring-vm-private-ip>:4318/
+timeout 3 bash -c '</dev/tcp/<monitoring-vm-private-ip>/4317'
 ```
 
-`4318`은 HTTP receiver 확인용이므로 `404 page not found` 같은 HTTP 응답이 오면 네트워크 연결은 된 것이다.
+`4317`은 Tempo OTLP gRPC receiver 포트이므로 TCP 연결이 성공하면 App VM에서 trace 전송 경로에 접근할 수 있다.
 
 #### 3.4.4 Demo app 이미지 빌드 및 import
 
